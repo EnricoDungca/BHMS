@@ -169,6 +169,7 @@ class AccountForm:
             fg=self.text_color
         ).grid(row=9, column=0, sticky="w", pady=(10, 5))
         
+        
         self.verify_password_entry = tk.Entry(
             form_container, 
             show="*", 
@@ -178,7 +179,22 @@ class AccountForm:
             relief="solid"
         )
         self.verify_password_entry.grid(row=10, column=0, sticky="ew", padx=5)
-
+        
+        # see password
+        self.show_password_var = tk.BooleanVar()
+        self.show_password_var.set(False)
+        
+        self.show_password_checkbutton = tk.Checkbutton(
+            form_container, 
+            text="Show Password", 
+            font=self.label_font, 
+            bg="white", 
+            fg=self.text_color,
+            variable=self.show_password_var,
+            command=self.toggle_password_visibility
+        )
+        self.show_password_checkbutton.grid(row=11, column=0, sticky="w", pady=(10, 5))
+        
         # Account Status
         tk.Label(
             form_container, 
@@ -186,7 +202,7 @@ class AccountForm:
             font=self.label_font, 
             bg="white", 
             fg=self.text_color
-        ).grid(row=11, column=0, sticky="w", pady=(10, 5))
+        ).grid(row=12, column=0, sticky="w", pady=(10, 5))
         
         self.status_var = tk.StringVar()
         
@@ -202,11 +218,11 @@ class AccountForm:
             width=38
         )
         self.status_combobox.current(0)
-        self.status_combobox.grid(row=12, column=0, sticky="ew", padx=5, pady=(0, 20))
+        self.status_combobox.grid(row=13, column=0, sticky="ew", padx=5, pady=(0, 20))
 
         # Buttons frame
         buttons_frame = tk.Frame(form_container, bg="white")
-        buttons_frame.grid(row=13, column=0, sticky="ew", pady=20)
+        buttons_frame.grid(row=14, column=0, sticky="ew", pady=20)
         
         # Cancel Button
         tk.Button(
@@ -239,6 +255,14 @@ class AccountForm:
             command=self.submit_form
         ).pack(side=tk.RIGHT)
 
+    def toggle_password_visibility(self):
+        if self.show_password_var.get():
+            self.password_entry.config(show="")
+            self.verify_password_entry.config(show="")
+        else:
+            self.password_entry.config(show="*")
+            self.verify_password_entry.config(show="*")
+    
     def create_exit_button(self):
         # Create exit button in top-right corner
         exit_button = tk.Button(

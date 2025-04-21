@@ -155,7 +155,7 @@ class LoginUI(tk.Tk):
             return
         
         if self.mode == "admin":
-            # Placeholder for admin validation (customize as needed)
+            # Placeholder for admin validation
             valid = authentication(username, password).main("admin")
             if valid:
                 self.destroy()

@@ -73,7 +73,8 @@ class AccountManagementApp:
         self.create_table(content_frame)
 
     def register_account(self):
-        print("Register New Account button clicked")
+        self.root.destroy()
+        registerNewAccount.main()
 
 
     def create_header(self, parent):
