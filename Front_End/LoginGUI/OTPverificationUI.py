@@ -355,16 +355,16 @@ class OTPVerificationScreen:
         else:
             if self.verify:
                 self.root.destroy()
-                accountManagement.main()
+                accountManagement.main(self.id)
             else:
                 self.root.destroy()
                 Login.LoginUI() 
         
 
-def main(email, verify, mode):
+def main(email, id, verify, mode):
     """Main function to initiate the OTP Verification Screen"""
     root = tk.Tk()
-    otp_screen = OTPVerificationScreen(root, email, verify, mode)
+    otp_screen = OTPVerificationScreen(root, email, id, verify, mode)
     root.mainloop()
 
 

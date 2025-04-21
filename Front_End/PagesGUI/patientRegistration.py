@@ -124,7 +124,7 @@ class PatientManagementApp:
 
     def register_patient(self):
         self.root.destroy()
-        registerForm.main()
+        registerForm.main(self.id)
 
     def create_search(self, parent):
         search_frame = tk.Frame(parent, bg="white", pady=20)

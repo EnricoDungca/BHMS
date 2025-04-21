@@ -126,7 +126,7 @@ class InventoryManagementApp:
 
     def add_inventory_item(self):
         self.root.destroy()
-        inventoryForm.main()
+        inventoryForm.main(self.id)
 
     def create_search(self, parent):
         search_frame = tk.Frame(parent, bg="white", pady=20)

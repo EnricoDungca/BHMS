@@ -9,10 +9,12 @@ from Back_End import systemfnc as fnc
 from Front_End.PagesGUI import medicalRecord
 
 class MedicalRecordForm:
-    def __init__(self, root):
+    def __init__(self, root, id):
         self.root = root
         self.root.title("Medical Record Form")
         self.root.attributes('-fullscreen', True)
+        
+        self.id = id
         
         self.names = fnc.database_con().read("registration", "*")
         
@@ -196,11 +198,11 @@ class MedicalRecordForm:
 
     def back(self):
         self.root.destroy()
-        medicalRecord.main()
+        medicalRecord.main(self.id)
 
-def main():
+def main(id):
     root = tk.Tk()
-    app = MedicalRecordForm(root)
+    app = MedicalRecordForm(root, id)
     root.mainloop()
 
 if __name__ == "__main__":

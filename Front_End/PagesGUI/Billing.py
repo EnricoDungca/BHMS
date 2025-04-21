@@ -123,7 +123,7 @@ class BillingManagementApp:
 
     def add_billing(self):
         self.root.destroy()
-        billingForm.main()
+        billingForm.main(self.id)
 
     def create_search(self, parent):
         search_frame = tk.Frame(parent, bg="white", pady=20)

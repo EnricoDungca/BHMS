@@ -9,11 +9,13 @@ from Back_End import systemfnc as fnc
 from Front_End.PagesGUI import Inventory
 
 class InventoryForm:
-    def __init__(self, root):
+    def __init__(self, root, id):
         self.root = root
         self.root.title("Inventory Form")
         self.root.attributes('-fullscreen', True)
 
+        self.id = id
+        
         self.colors = {
             "bg": "#ffffff",
             "accent": "#000000",
@@ -147,11 +149,11 @@ class InventoryForm:
 
     def back(self):
         self.root.destroy()
-        Inventory.main()
+        Inventory.main(self.id)
     
-def main():
+def main(id):
     root = tk.Tk()
-    app = InventoryForm(root)
+    app = InventoryForm(root, id)
     root.mainloop()
     
 if __name__ == "__main__":

@@ -118,7 +118,7 @@ class MedicalRecordManagementApp:
 
     def add_medical_record(self):
         self.root.destroy()
-        medicalRecordForm.main()
+        medicalRecordForm.main(self.id)
 
     def create_tab_bar(self, parent):
         self.active_tab = tk.StringVar(value="medical")

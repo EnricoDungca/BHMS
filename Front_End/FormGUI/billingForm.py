@@ -9,11 +9,13 @@ from Back_End import systemfnc as fnc
 from Front_End.PagesGUI import Billing
 
 class BillingForm:
-    def __init__(self, root):
+    def __init__(self, root, id):
         self.root = root
         self.root.title("Billing Form")
         self.root.attributes('-fullscreen', True)
 
+        self.id = id
+        
         self.colors = {
             "bg": "#ffffff",
             "accent": "#000000",
@@ -151,11 +153,11 @@ class BillingForm:
 
     def back(self):
         self.root.destroy()
-        Billing.main()
+        Billing.main(self.id)
     
-def main():
+def main(id):
     root = tk.Tk()
-    app = BillingForm(root)
+    app = BillingForm(root, id)
     root.mainloop()
 
 if __name__ == "__main__":

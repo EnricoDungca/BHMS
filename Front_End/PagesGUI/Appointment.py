@@ -124,7 +124,7 @@ class AppointmentManagementApp:
 
     def schedule_appointment(self):
         self.root.destroy()
-        AppointmentForm.main()
+        AppointmentForm.main(self.id)
 
     def create_search(self, parent):
         search_frame = tk.Frame(parent, bg="white", pady=20)

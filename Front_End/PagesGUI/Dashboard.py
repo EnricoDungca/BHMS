@@ -26,6 +26,8 @@ class DashboardApp(tk.Tk):
         self.bind('<F11>', self.fullscreen)
         
         self.id = id
+        
+        print(self.id)
  
         self.setup_styles()
         self.create_topbar()
