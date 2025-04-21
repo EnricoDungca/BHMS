@@ -15,13 +15,15 @@ from Front_End.PagesGUI import Inventory
 from Front_End.FormGUI import medicalRecordForm
 
 class MedicalRecordManagementApp:
-    def __init__(self, root):
+    def __init__(self, root, id):
         self.root = root
         self.root.title("Birthing Home - Check Up")
         self.root.geometry("1200x700")
         self.root.attributes('-fullscreen', True)
         self.root.bind('<Escape>', self.exit_fullscreen)
-
+        
+        self.id = id
+        
         self.init_fonts()
         self.create_topbar()
         self.create_content()
@@ -67,13 +69,13 @@ class MedicalRecordManagementApp:
     def nav_click(self, item):
         self.root.destroy()
         if item == "Dashboard":
-            Dashboard.DashboardApp()
+            Dashboard.main(self.id)
         elif item == "Patients":
-            patientRegistration.main()
+            patientRegistration.main(self.id)
         elif item == "Appointments":
-            Appointment.main()
+            Appointment.main(self.id)
         elif item == "Records":
-            main()
+            main(self.id)
         elif item == "Billing":
             Billing.main()
         elif item == "Inventory":
@@ -340,9 +342,9 @@ class MedicalRecordManagementApp:
             if query in record_text or query in ["", "search nsd records..."]:
                 self.create_nsd_record_row(self.nsd_records_container, record, self.nsd_col_widths)
 
-def main():
+def main(id):
     root = tk.Tk()
-    app = MedicalRecordManagementApp(root)
+    app = MedicalRecordManagementApp(root, id)
     root.mainloop()
 
 if __name__ == "__main__":

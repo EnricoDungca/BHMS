@@ -15,13 +15,15 @@ from Front_End.PagesGUI import Billing
 from Front_End.FormGUI import inventoryForm
 
 class InventoryManagementApp:
-    def __init__(self, root):
+    def __init__(self, root, id):
         self.root = root
         self.root.title("Birthing Home - Inventory Management")
         self.root.geometry("1200x700")
         self.root.attributes('-fullscreen', True)
         self.root.bind('<Escape>', self.exit_fullscreen)
 
+        self.id = id
+        
         self.init_fonts()
         self.create_topbar()
         self.create_content()
@@ -88,17 +90,17 @@ class InventoryManagementApp:
     def nav_click(self, item):
         self.root.destroy()
         if item == "Dashboard":
-            Dashboard.DashboardApp()
+            Dashboard.main(self.id)
         elif item == "Patients":
-            patientRegistration.main()
+            patientRegistration.main(self.id)
         elif item == "Appointments":
-            Appointment.main()
+            Appointment.main(self.id)
         elif item == "Records":
-            medicalRecord.main()
+            medicalRecord.main(self.id)
         elif item == "Billing":
-            Billing.main()
+            Billing.main(self.id)
         elif item == "Inventory":
-            main()
+            main(self.id)
 
     def logout(self):
         self.root.destroy()
@@ -242,9 +244,9 @@ class InventoryManagementApp:
                   command=lambda: print(f"Edit inventory item {item['ID']}"))\
 .pack(side=tk.LEFT)
 
-def main():
+def main(id):
     root = tk.Tk()
-    app = InventoryManagementApp(root)
+    app = InventoryManagementApp(root, id)
     root.mainloop()
 
 if __name__ == "__main__":

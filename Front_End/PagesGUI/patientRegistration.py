@@ -16,13 +16,15 @@ from Front_End.FormGUI import registerForm
 
 
 class PatientManagementApp:
-    def __init__(self, root):
+    def __init__(self, root, id):
         self.root = root
         self.root.title("Birthing Home - Patient Management")
         self.root.geometry("1200x700")
         self.root.attributes('-fullscreen', True)
         self.root.bind('<Escape>', self.exit_fullscreen)
 
+        self.id = id
+        
         self.init_fonts()
         self.create_topbar()
         self.create_content()
@@ -86,17 +88,17 @@ class PatientManagementApp:
     def nav_click(self, item):
         self.root.destroy()
         if item == "Dashboard":
-            Dashboard.DashboardApp()
+            Dashboard.main(self.id)
         elif item == "Patients":
-            main()
+            main(self.id)
         elif item == "Appointments":
-            Appointment.main()
+            Appointment.main(self.id)
         elif item == "Records":
-            medicalRecord.main()
+            medicalRecord.main(self.id)
         elif item == "Billing":
-            Billing.main()
+            Billing.main(self.id)
         elif item == "Inventory":
-            Inventory.main()
+            Inventory.main(self.id)
 
     def logout(self):
         self.root.destroy()
@@ -227,9 +229,9 @@ class PatientManagementApp:
                   command=lambda: print(f"Edit patient {patient['ID']}"))\
 .pack(side=tk.LEFT)
 
-def main():
+def main(id):
     root = tk.Tk()
-    app = PatientManagementApp(root)
+    app = PatientManagementApp(root, id)
     root.mainloop()
 
 if __name__ == "__main__":

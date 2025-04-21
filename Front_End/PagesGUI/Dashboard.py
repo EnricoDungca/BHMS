@@ -14,7 +14,7 @@ from Front_End.PagesGUI import Billing
 from Front_End.PagesGUI import Inventory
 
 class DashboardApp(tk.Tk):
-    def __init__(self):
+    def __init__(self, id):
         super().__init__()
         self.title("BirthCare Dashboard")
         self.geometry("1000x750")
@@ -24,7 +24,9 @@ class DashboardApp(tk.Tk):
         # exit fullscreen and fullscreen
         self.bind('<Escape>', self.exit_fullscreen)
         self.bind('<F11>', self.fullscreen)
-
+        
+        self.id = id
+ 
         self.setup_styles()
         self.create_topbar()
         self.create_main_content()
@@ -51,17 +53,17 @@ class DashboardApp(tk.Tk):
     def nav_click(self, item):
         self.destroy()
         if item == "Dashboard":
-            main()
+            main(self.id)
         elif item == "Patients":
-            patientRegistration.main()
+            patientRegistration.main(self.id)
         elif item == "Appointments":
-            Appointment.main()
+            Appointment.main(self.id)
         elif item == "Records":
-            medicalRecord.main()
+            medicalRecord.main(self.id)
         elif item == "Billing":
-            Billing.main()
+            Billing.main(self.id)
         elif item == "Inventory":
-            Inventory.main()
+            Inventory.main(self.id)
     
     def logout(self):
         self.destroy()
@@ -241,8 +243,8 @@ class DashboardApp(tk.Tk):
         ttk.Button(right, text="Reschedule").pack(side="left", padx=5)
         ttk.Button(right, text="Check In").pack(side="left")
     
-def main():
-    app = DashboardApp()
+def main(id):
+    app = DashboardApp(id)
     app.mainloop()
 
 if __name__ == "__main__":

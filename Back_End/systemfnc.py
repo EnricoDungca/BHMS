@@ -43,7 +43,7 @@ class authentication():
             for row in database_con().read("accounts", "*"):
                 if self.email == row[4]:
                     if self.password == Security().decrypt_str(row[5]):
-                        return True
+                        return row[0], True
             return False
         except Exception as e:
             messagebox.showerror("Error", str(e))

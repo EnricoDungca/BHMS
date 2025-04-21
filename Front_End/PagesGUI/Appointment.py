@@ -16,13 +16,15 @@ from Front_End.FormGUI import AppointmentForm
 from Front_End.ProfileGUI import appointmentProfile
 
 class AppointmentManagementApp:
-    def __init__(self, root):
+    def __init__(self, root, id):
         self.root = root
         self.root.title("Birthing Home - Appointments")
         self.root.geometry("1200x700")
         self.root.attributes('-fullscreen', True)
         self.root.bind('<Escape>', self.exit_fullscreen)
-
+        
+        self.id = id
+        
         self.init_fonts()
         self.create_topbar()
         self.create_content()
@@ -86,17 +88,17 @@ class AppointmentManagementApp:
     def nav_click(self, item):
         self.root.destroy()
         if item == "Dashboard":
-            Dashboard.DashboardApp()
+            Dashboard.main(self.id)
         elif item == "Patients":
-            patientRegistration.main()
+            patientRegistration.main(self.id)
         elif item == "Appointments":
-            main()
+            main(self.id)
         elif item == "Records":
-            medicalRecord.main()
+            medicalRecord.main(self.id)
         elif item == "Billing":
-            Billing.main()
+            Billing.main(self.id)
         elif item == "Inventory":
-            Inventory.main()
+            Inventory.main(self.id)
 
     def logout(self):
         self.root.destroy()
@@ -249,9 +251,9 @@ class AppointmentManagementApp:
         self.root.destroy()
         appointmentProfile.show_profile(ID)
 
-def main():
+def main(id):
     root = tk.Tk()
-    app = AppointmentManagementApp(root)
+    app = AppointmentManagementApp(root, id)
     root.mainloop()
 
 if __name__ == "__main__":

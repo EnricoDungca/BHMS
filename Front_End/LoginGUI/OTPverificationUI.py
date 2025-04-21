@@ -12,7 +12,7 @@ from Front_End.LoginGUI import Login
 from Front_End.PagesGUI import accountManagement
 
 class OTPVerificationScreen:
-    def __init__(self, root, email, verify, mode, digits=6, timeout=60):
+    def __init__(self, root, email, id, verify, mode, digits=6, timeout=60):
         self.root = root
         self.root.title("OTP Verification")
         
@@ -31,8 +31,9 @@ class OTPVerificationScreen:
         self.time_remaining = timeout
         self.timer_running = False
         
-        # Store email and verification data
+        # Store email and verification data, etc.
         self.email = email
+        self.id = id
         self.verify = verify
         self.mode = mode
         self.code = self.send_otp()
@@ -340,14 +341,14 @@ class OTPVerificationScreen:
         message_label.pack()
         
         # Close after 2 seconds and redirect
-        self.root.after(2000, self.redirect(self.mode))
+        self.root.after(2000, self.redirect())
     
-    def redirect(self, mode):
+    def redirect(self):
         """Redirect after success"""
-        if mode == "user":
+        if self.mode == "user":
             if self.verify:
                 self.root.destroy()
-                Dashboard.main()
+                Dashboard.main(self.id)
             else:
                 self.root.destroy()
                 Login.LoginUI()    

@@ -164,10 +164,10 @@ class LoginUI(tk.Tk):
                 messagebox.showerror("Error", "Invalid username or password")
         else:
             # Validate credentials in user mode using the authentication module
-            valid = authentication(username, password).main("user")
+            id, valid = authentication(username, password).main("user")
             if valid:
                 self.destroy()
-                OTPverificationUI.main(username, valid, "user")
+                OTPverificationUI.main(username, id, valid, "user")
             else:
                 messagebox.showerror("Error", "Invalid username or password")
 
