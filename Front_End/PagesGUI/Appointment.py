@@ -251,7 +251,7 @@ class AppointmentManagementApp:
         self.root.destroy()
         appointmentProfile.show_profile(ID)
 
-def main(id):
+def main(id=None):
     root = tk.Tk()
     app = AppointmentManagementApp(root, id)
     root.mainloop()

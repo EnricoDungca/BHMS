@@ -77,9 +77,9 @@ class MedicalRecordManagementApp:
         elif item == "Records":
             main(self.id)
         elif item == "Billing":
-            Billing.main()
+            Billing.main(self.id)
         elif item == "Inventory":
-            Inventory.main()
+            Inventory.main(self.id)
 
     def logout(self):
         self.root.destroy()

@@ -156,18 +156,18 @@ class LoginUI(tk.Tk):
         
         if self.mode == "admin":
             # Placeholder for admin validation
-            valid = authentication(username, password).main("admin")
+            valid = authentication(username, password).main(self.mode)
             if valid:
                 self.destroy()
-                OTPverificationUI.main(username, valid, "admin")
+                OTPverificationUI.main(username, valid, self.mode)
             else:
                 messagebox.showerror("Error", "Invalid username or password")
         else:
             # Validate credentials in user mode using the authentication module
-            id, valid = authentication(username, password).main("user")
+            id, valid = authentication(username, password).main(self.mode)
             if valid:
                 self.destroy()
-                OTPverificationUI.main(username, id, valid, "user")
+                OTPverificationUI.main(username, id, valid, self.mode)
             else:
                 messagebox.showerror("Error", "Invalid username or password")
 

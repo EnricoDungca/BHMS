@@ -4,6 +4,9 @@ import mysql.connector
 import smtplib
 import random as rd
 from dotenv import load_dotenv, dotenv_values
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
 
 config = {
     **dotenv_values(r"Back_End\.env.secret")
@@ -27,6 +30,18 @@ class email():
                 server.login(config["EMAIL"], config["GOOGLE_KEY"])
                 server.sendmail(config["EMAIL"], self.email, f"""Subject: OTP\n\nYour OTP is {self.code}""")
                 return self.code
+            except Exception as e:
+                messagebox.showerr or("Error", "Error in sending OTP", str(e))
+        else:
+            messagebox.showerror("Error", "Invalid email address")
+            
+    def send_email(self, message):
+        if self.verify_gmail():
+            try:
+                server = smtplib.SMTP("smtp.gmail.com", 587)
+                server.starttls()
+                server.login(config["EMAIL"], config["GOOGLE_KEY"])
+                server.sendmail(config["EMAIL"], self.email, message.as_string())
             except Exception as e:
                 messagebox.showerr or("Error", "Error in sending OTP", str(e))
         else:

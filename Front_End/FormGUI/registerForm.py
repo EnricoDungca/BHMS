@@ -38,7 +38,7 @@ class PatientRegistrationForm:
             "Personal Information": {},
             "Address": {},
             "Emergency Contact": {},
-            "Insurance": {}
+            "Insurance": {},
         }
         
         self.create_widgets()
@@ -218,37 +218,17 @@ class PatientRegistrationForm:
     def submit_data(self):
         # Map the order of fields as expected by the database
         db_fields = [
-            "fname", "lname", "dob", "gender", "phonenum", "email",
-            "House/Building/Street", "barangay", "city/municipality", "province", "region", "zip",
-            "ECname", "ECrelationship", "ECphone", "ECemail",
-            "insuranceProvider", "Policynum", "GroupNum", "PrimaryInsured"
-        ]
-
-        # Define the order in which fields should be extracted
-        form_field_order = [
-            ("Personal Information", ["First Name", "Last Name", "Date of Birth", "Gender", "Phone", "Email"]),
-            ("Address", ["House/Building No. and Street", "Barangay", "City/Municipality", "Province", "Region", "ZIP/Postal Code"]),
-            ("Emergency Contact", ["Contact Name", "Relationship", "Phone", "Email"]),
-            ("Insurance", ["Insurance Provider", "Policy Number", "Group Number", "Primary Insured"]),
+            "fname", "lname", "dob", "gender", "phonenum", "email", "Street", 
+            "barangay", "cityMunicipality", "province", "region", "zip", "ECname", 
+            "ECrelationship", "ECphone", "ECemail", "insuranceProvider", "Policynum", 
+            "GroupNum", "PrimaryInsured", "staffID"
         ]
 
         values = []
-        empty_fields = []
-
-        for section, fields in form_field_order:
-            for field in fields:
-                value = self.form_vars[section][field].get().strip()
-                if not value or value == "Select Region":
-                    empty_fields.append(f"{section} - {field}")
-                values.append(value)
-
-        if empty_fields:
-            messagebox.showwarning(
-                "Missing Information",
-                "Please fill in the following fields:\n• " + "\n• ".join(empty_fields)
-            )
-            return
-        print(values)
+        for section, fields in self.form_vars.items():
+            for field, var in fields.items():
+                values.append(var.get())
+        values.append(self.id)
         # Submit to database
         fnc.database_con().insert("registration", db_fields, values)
 

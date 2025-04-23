@@ -1,19 +1,37 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext, filedialog
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
 import re
 import os
+import sys
+from dotenv import load_dotenv, dotenv_values
+
+config = {
+    **dotenv_values(r"Back_End\.env.secret")
+}
+
+# load local module
+sys.path.insert(0, '\\BHMS')
+from Back_End import systemfnc as fnc
+from Front_End.PagesGUI import Dashboard
 
 class CompactEmailSender:
-    def __init__(self, root):
+    def __init__(self, root, id):
         self.root = root
         self.root.title("Email Sender")
         self.root.geometry("600x1000")
         self.root.config(bg="#1e1e2f")  # Dark background
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
+        
+        self.id = id
         
         # Colors and styling
         self.primary_color = "#4285F4"  # Google blue
         self.bg_color = "#1e1e2f"
-        self.text_color = "#ffffff"
+        self.text_color = "#4285F4"
         self.entry_bg = "#2e2e3e"
         
         # Configure style
@@ -24,11 +42,17 @@ class CompactEmailSender:
         self.style.configure('TButton', font=('Arial', 10))
         self.style.map("TButton", background=[("active", self.primary_color)])
         
+        # Email content
+        self.message = MIMEMultipart()
+        
         # Track attachments
         self.attachments = []
         
         self.create_widgets()
-    
+    def on_close(self):
+        self.root.destroy()
+        Dashboard.main(self.id)
+        
     def create_widgets(self):
         # Main container
         main_frame = ttk.Frame(self.root)
@@ -169,6 +193,22 @@ class CompactEmailSender:
         
         messagebox.showinfo("Success", f"Email{attachment_info} sent successfully!")
         self.status_var.set(f"Email{attachment_info} sent")
+        
+        self.message["From"] = config["EMAIL"]
+        self.message["to"] = to_email
+        self.message["subject"] = subject
+        self.message.attach(MIMEText(message, "plain"))
+        
+        for attachment in self.attachments:
+            with open(attachment, "rb") as f:
+                part = MIMEBase("application", "octet-stream")
+                part.set_payload(f.read())
+                encoders.encode_base64(part)
+                part.add_header("Content-Disposition", f"attachment; filename={os.path.basename(attachment)}")
+                self.message.attach(part)
+        
+        fnc.email(to_email, True).send_email(self.message)
+        
     
     def discard_draft(self):
         if messagebox.askyesno("Discard", "Discard this draft?"):
@@ -179,7 +219,10 @@ class CompactEmailSender:
             self.update_attachment_display()
             self.status_var.set("Draft discarded")
 
-if __name__ == "__main__":
+def main(id):
     root = tk.Tk()
-    app = CompactEmailSender(root)
+    app = CompactEmailSender(root, id)
     root.mainloop()
+
+if __name__ == "__main__":
+    main()

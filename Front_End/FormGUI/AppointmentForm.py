@@ -188,37 +188,22 @@ class AppointmentForm:
                 self.form_vars[section_name][field] = var
 
     def submit_data(self):
-        all_data = {}
-        empty_fields = []
-
-        for section, fields in self.form_vars.items():
-            all_data[section] = {}
-            for field, var in fields.items():
-                if isinstance(var, tuple):  # For Appointment Time (hour, minute)
+        values = []
+        for section in self.form_vars.values():
+            for var in section.values():
+                if isinstance(var, tuple):  # Appointment Time
                     hour = var[0].get()
                     minute = var[1].get()
-                    if hour == "HH" or minute == "MM":
-                        empty_fields.append(f"{section} - {field}")
-                        all_data[section][field] = ""
-                    else:
-                        all_data[section][field] = f"{hour}:{minute}"
+                    values.append(f"{hour}:{minute}")
                 else:
-                    value = var.get()
-                    all_data[section][field] = value
-                    if not value or value.startswith("Select"):
-                        empty_fields.append(f"{section} - {field}")
+                    values.append(var.get())
+        values.append(self.id)  # Add ID at the end
+        print(values)  # For debugging
 
-        if empty_fields:
-            messagebox.showwarning("Missing Information", "Please fill in the following fields:\n• " + "\n• ".join(empty_fields))
-            return
-        
-        values = [value for values in all_data.values() for value in values.values()]
-        
-        fnc.database_con().insert("appointment", ("Fname", "Lname", "phonenum", "email", "apptDate", "apptTime", "apptType", "provider", "status", "notes"), values)
-        
-        summary = "\n\n".join(f"{section}:\n" + "\n".join(f"  {k}: {v}" for k, v in fields.items()) for section, fields in all_data.items())
-        messagebox.showinfo("Appointment Scheduled", "Your appointment has been scheduled successfully!\n\nSummary:\n" + summary)
+        fnc.database_con().insert("appointment", ("Fname", "Lname", "phonenum", "email", "apptDate", "apptTime", "apptType", "provider", "status", "notes", "staffID"), values)
+
         self.clear_form()
+
 
     def clear_form(self):
         for section, fields in self.form_vars.items():
@@ -235,7 +220,7 @@ class AppointmentForm:
         self.root.destroy()
         Appointment.main(self.id)
 
-def main(id):
+def main(id=8):
     root = tk.Tk()
     app = AppointmentForm(root, id)
     root.mainloop()

@@ -12,6 +12,7 @@ from Front_End.PagesGUI import Appointment
 from Front_End.PagesGUI import medicalRecord
 from Front_End.PagesGUI import Billing
 from Front_End.PagesGUI import Inventory
+from Front_End.FormGUI import emailSender
 
 class DashboardApp(tk.Tk):
     def __init__(self, id):
@@ -122,7 +123,7 @@ class DashboardApp(tk.Tk):
     def create_main_content(self):
         content_frame = tk.Frame(self, bg="#f4f5f7")
         content_frame.pack(fill="both", expand=True)
-
+        
         # Header Bar
         header_frame = tk.Frame(content_frame, bg="#f4f5f7")
         header_frame.pack(fill="x", padx=40, pady=20)
@@ -130,6 +131,10 @@ class DashboardApp(tk.Tk):
         dashboard_label = tk.Label(header_frame, text="Dashboard", font=("Helvetica", 20, "bold"), bg="#f4f5f7")
         dashboard_label.pack(side="left")
 
+        # send email button
+        send_email_btn = tk.Button(header_frame, command= self.send_email,text="Send Email", font=("Helvetica", 10), bg="#f4f5f7", fg="#666", cursor="hand2")
+        send_email_btn.pack(side="right", padx=5)
+        
         date_label = tk.Label(header_frame, text=date.today().strftime("%B %d, %Y"),
                               font=("Helvetica", 10), bg="#f4f5f7")
         date_label.pack(side="right")
@@ -206,9 +211,9 @@ class DashboardApp(tk.Tk):
         # Loop to create the appointment cards
         for appt in fnc.database_con().read("appointment", "*"):
             # Only display appointments for today or scheduled appointments from another day
-            if str(appt[4]) == str(date.today().strftime("%Y-%m-%d")):
+            if str(appt[6]) == str(date.today().strftime("%Y-%m-%d")):
                     continue
-            data = {"name": appt[2], "time": f"{appt[6]} - {appt[7]}", "type": appt[10]}
+            data = {"name": appt[2], "datetime": f"{appt[6]} - {appt[7]}", "type": appt[10]}
             self.create_appointment_card(scrollable_frame, data)
         
         # Enable mouse wheel scrolling on Windows and MacOS
@@ -232,7 +237,7 @@ class DashboardApp(tk.Tk):
 
         type_label = tk.Label(
             left,
-            text=f"{appointment['time']} - {appointment['type']}",
+            text=f"{appointment['datetime']} - {appointment['type']}",
             font=("Helvetica", 9),
             bg="white",
             fg="#666"
@@ -244,6 +249,10 @@ class DashboardApp(tk.Tk):
 
         ttk.Button(right, text="Reschedule").pack(side="left", padx=5)
         ttk.Button(right, text="Check In").pack(side="left")
+
+    def send_email(self):
+        self.destroy()
+        emailSender.main(self.id)
     
 def main(id):
     app = DashboardApp(id)
