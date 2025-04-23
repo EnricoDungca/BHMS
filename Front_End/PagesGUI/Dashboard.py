@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from datetime import date
 import sys
+from tkinter import messagebox
 
 sys.path.insert(0, '\\BHMS')
 # load local module
@@ -212,9 +213,8 @@ class DashboardApp(tk.Tk):
         for appt in fnc.database_con().read("appointment", "*"):
             # Only display appointments for today or scheduled appointments from another day
             if str(appt[6]) == str(date.today().strftime("%Y-%m-%d")):
-                    continue
-            data = {"name": appt[2], "datetime": f"{appt[6]} - {appt[7]}", "type": appt[10]}
-            self.create_appointment_card(scrollable_frame, data)
+                data = {"name": appt[2], "datetime": f"{appt[6]} - {appt[7]}", "type": appt[10]}
+                self.create_appointment_card(scrollable_frame, data)
         
         # Enable mouse wheel scrolling on Windows and MacOS
         def on_mousewheel(event):
@@ -259,4 +259,8 @@ def main(id):
     app.mainloop()
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(e)
+        Login.main()

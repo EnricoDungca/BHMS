@@ -244,7 +244,7 @@ class AppointmentManagementApp:
                 "status": row[10],
             }
 
-            if query in str(appointment["ID"]).lower() or query in appointment["patient_name"].lower():
+            if query in str(appointment["ID"]).lower() or query in appointment["patient_name"].lower() or query in appointment["datetime"].lower() or query in appointment["provider"].lower() or query in appointment["status"].lower():
                 self.create_appointment_row(self.scrollable_frame, appointment, [150, 300, 300, 300, 300, 300])
 
     def viewProfile(self, ID):
@@ -257,4 +257,8 @@ def main(id=None):
     root.mainloop()
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(e)
+        Login.main()

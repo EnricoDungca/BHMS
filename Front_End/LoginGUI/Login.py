@@ -180,7 +180,10 @@ class LoginUI(tk.Tk):
         new_mode = "admin" if self.mode == "user" else "user"
         LoginUI(mode=new_mode).mainloop()
 
-if __name__ == "__main__":
+def main():
     # Start the login UI in user mode (pass mode="admin" to start in admin mode)
     app = LoginUI(mode="user")
     app.mainloop()
+
+if __name__ == "__main__":
+    main()

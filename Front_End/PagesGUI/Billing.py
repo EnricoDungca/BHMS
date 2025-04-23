@@ -205,7 +205,7 @@ class BillingManagementApp:
                 "balance": row[4],
                 "date": row[5],
             }
-            if query in str(record["ID"]).lower() or query in record["patient_name"].lower():
+            if query in str(record["ID"]).lower() or query in record["patient_name"].lower() or query in record["total_amount"].lower() or query in record["amount_paid"].lower() or query in record["balance"].lower() or query in record["date"].lower():
                 self.create_billing_row(self.scrollable_frame, record, self.col_widths)
 
     def create_billing_row(self, parent, record, col_widths):
@@ -237,4 +237,8 @@ def main(id):
     root.mainloop()
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(e)
+        Login.main()

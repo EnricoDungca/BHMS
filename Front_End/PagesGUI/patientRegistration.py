@@ -235,4 +235,8 @@ def main(id):
     root.mainloop()
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(e)
+        Login.main()

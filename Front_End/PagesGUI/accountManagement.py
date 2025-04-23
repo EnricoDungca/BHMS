@@ -166,7 +166,7 @@ class AccountManagementApp:
         for row in accounts:
             account = {
                 "ID": row[0],
-                "email": row[4],
+                "name": row[2],
                 "role": row[3],
                 "status": row[6],
             }
@@ -181,7 +181,7 @@ class AccountManagementApp:
             "Inactive": "#F44336"
         }.get(account["status"], "#9C27B0")
 
-        values = [account["ID"], account["email"], account["role"], account["status"]]
+        values = [account["ID"], account["name"], account["role"], account["status"]]
         for i, val in enumerate(values):
             fg = status_color if i == 3 else "black"
             tk.Label(row_frame, text=val, font="Arial 10", bg="white", fg=fg,
@@ -206,13 +206,14 @@ class AccountManagementApp:
         for row in accounts:
             account = {
                 "ID": row[0],
-                "username": row[1],
-                "role": row[2],
-                "status": row[3],
+                "name": row[2],
+                "role": row[3],
+                "status": row[6],
             }
 
-            if query in str(account["ID"]).lower() or query in account["username"].lower():
+            if query in str(account["ID"]).lower() or query in account["name"].lower() or query in account["role"].lower():
                 self.create_account_row(self.scrollable_frame, account, [150, 300, 300, 200, 200])
+
 
 def main():
     root = tk.Tk()
@@ -220,4 +221,8 @@ def main():
     root.mainloop()
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(e)
+        Login.main()
