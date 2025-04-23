@@ -12,7 +12,7 @@ from Back_End import systemfnc as fnc
 from Front_End.PagesGUI import Appointment
 
 class ProfileViewer:
-    def __init__(self, root, patient_data=None):
+    def __init__(self, root, id , patient_data=None):
         self.root = root
         self.root.title("Patient Appointment Profile")
         self.root.attributes('-fullscreen', True)
@@ -32,6 +32,7 @@ class ProfileViewer:
             }
         }
         
+        self.id = id
         # Profile image (can be passed in or use default)
         self.profile_image = Image.open("Front_End\Pic\logo.png")
         
@@ -105,7 +106,7 @@ class ProfileViewer:
 
     def back(self):
         self.root.destroy()
-        Appointment.main()
+        Appointment.main(self.id)
 
     def create_profile_card(self, parent):
         # Create a centered card
@@ -292,9 +293,9 @@ class ProfileViewer:
         except Exception as e:
             messagebox.showerror("Error", f"Could not save image: {str(e)}")
 
-def show_profile(ID):
+def show_profile(ID, staffID):
     data = fnc.database_con().read("appointment", "*")
-    
+    print(staffID)
     for row in data:
         if row[0] == ID:
             patient_data = {
@@ -314,7 +315,7 @@ def show_profile(ID):
             break
     
     root = tk.Tk()
-    app = ProfileViewer(root, patient_data)
+    app = ProfileViewer(root, staffID, patient_data)
     root.mainloop()
 
 # For testing purposes

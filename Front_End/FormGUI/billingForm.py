@@ -16,6 +16,8 @@ class BillingForm:
 
         self.id = id
         
+        self.data = fnc.database_con().read("registration", "*")
+        
         self.colors = {
             "bg": "#ffffff",
             "accent": "#000000",
@@ -91,8 +93,8 @@ class BillingForm:
 
     def create_billing_section(self):
         fields = [
-            "Patient Name", "Billing Date", "Service Description",
-            "Amount", "Payment Status"
+            "Patient Name", "Service Description",
+            "Amount", "Payment Method", "Payment Status"
         ]
 
         section = tk.LabelFrame(self.scrollable_frame, text="Billing Information",
@@ -105,35 +107,32 @@ class BillingForm:
             frame.pack(fill="x", pady=8)
 
             label = tk.Label(frame, text=field + ":", font=("Arial", 12),
-                             bg=self.colors["bg"], fg=self.colors["text"], anchor="w")
+                            bg=self.colors["bg"], fg=self.colors["text"], anchor="w")
             label.pack(fill="x")
 
             var = tk.StringVar()
             self.form_vars[field] = var
 
-            if field == "Payment Status":
-                var.set("Select Status")
-                dropdown = ttk.Combobox(frame, textvariable=var,
-                                        values=["Unpaid", "Paid", "Partially Paid"],
-                                        font=("Arial", 11), state="readonly")
-                dropdown.pack(fill="x", ipady=4)
-            elif field == "Discount":
-                var.set("0.00")
-                entry = tk.Entry(frame, textvariable=var, font=("Arial", 11),
-                                 bd=0, highlightthickness=1,
-                                 highlightbackground="#e0e0e0", highlightcolor=self.colors["accent"])
-                entry.pack(fill="x", ipady=8)
-            elif field == "Insurance Payment":
-                var.set("0.00")
-                entry = tk.Entry(frame, textvariable=var, font=("Arial", 11),
-                                 bd=0, highlightthickness=1,
-                                 highlightbackground="#e0e0e0", highlightcolor=self.colors["accent"])
-                entry.pack(fill="x", ipady=8)
+            if field == "Patient Name":
+                name_options = [f"{names[2]} {names[3]}" for names in self.data]
+                combobox = ttk.Combobox(frame, textvariable=var, values=name_options, state="readonly", font=("Arial", 12))
+                combobox.current(0)
+                combobox.pack(fill="x", pady=5)
+            elif field == "Payment Method":
+                method_options = ["Select Method", "Cash", "Insurance"]
+                combobox = ttk.Combobox(frame, textvariable=var, values=method_options, state="readonly", font=("Arial", 12))
+                combobox.current(0)
+                combobox.pack(fill="x", pady=5)
+            elif field == "Payment Status":
+                status_options = ["Select Status", "Paid", "Unpaid", "Pending"]
+                combobox = ttk.Combobox(frame, textvariable=var, values=status_options, state="readonly", font=("Arial", 12))
+                combobox.current(0)
+                combobox.pack(fill="x", pady=5)
+
             else:
-                entry = tk.Entry(frame, textvariable=var, font=("Arial", 11),
-                                 bd=0, highlightthickness=1,
-                                 highlightbackground="#e0e0e0", highlightcolor=self.colors["accent"])
-                entry.pack(fill="x", ipady=8)
+                entry = tk.Entry(frame, textvariable=var, font=("Arial", 12))
+                entry.pack(fill="x", pady=5)
+
 
     def submit_data(self):
         data = {field: var.get() for field, var in self.form_vars.items()}
@@ -143,8 +142,15 @@ class BillingForm:
             messagebox.showwarning("Missing Information", "Please fill in the following fields:\n• " + "\n• ".join(empty_fields))
             return
 
-        summary = "\n".join(f"{k}: {v}" for k, v in data.items())
-        messagebox.showinfo("Billing Submitted", "Billing information submitted successfully!\n\nSummary:\n" + summary)
+        values = [val for val in data.values()]
+        for v in self.data:
+            if values[0] == f"{v[2]} {v[3]}":
+                values.insert(0, v[0])
+        values.append(self.id)
+        print(values)
+            
+        fnc.database_con().insert("billing", ("patientID", "patientName", "service", "amount", "paymentMethod", "paymentStatus", "staffID"), values)
+        
         self.clear_form()
 
     def clear_form(self):

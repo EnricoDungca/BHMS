@@ -129,18 +129,11 @@ class InventoryForm:
             messagebox.showwarning("Missing Information", "Please fill in the following fields:\n• " + "\n• ".join(empty_fields))
             return
 
-        # Calculate the total price (quantity * unit price)
-        try:
-            quantity = float(data["Quantity"])
-            unit_price = float(data["Unit Price"])
-            total_price = quantity * unit_price
-            data["Total Price"] = total_price
-        except ValueError:
-            messagebox.showwarning("Invalid Input", "Please enter valid numerical values for Quantity and Unit Price.")
-            return
-
-        summary = "\n".join(f"{k}: {v}" for k, v in data.items())
-        messagebox.showinfo("Item Added", f"Inventory item added successfully!\n\nSummary:\n{summary}")
+        values = [val for val in data.values()]
+        values.append(self.id)
+        print(values)
+        
+        fnc.database_con().insert("inventory", ("item", "quantity", "unitPrice", "totalPrice", "staffID"), values)
         self.clear_form()
 
     def clear_form(self):
