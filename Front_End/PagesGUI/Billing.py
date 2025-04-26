@@ -12,6 +12,7 @@ from Front_End.PagesGUI import medicalRecord
 from Front_End.PagesGUI import Appointment
 from Front_End.PagesGUI import Inventory
 from Front_End.FormGUI import billingForm
+from Front_End.ProfileGUI import billingProfile
 
 class BillingManagementApp:
     def __init__(self, root, id):
@@ -156,8 +157,8 @@ class BillingManagementApp:
         table_frame = tk.Frame(dir_frame, bg="white")
         table_frame.pack(fill=tk.BOTH, expand=True)
 
-        headers = ["Bill ID", "Patient Name", "Total Amount", "Date Issued", "Status", "Actions"]
-        col_widths = [150, 300, 200, 200, 150, 200]
+        headers = ["Bill ID", "Patient Name", "Total Amount", "Date Issued", "Balance", "Status", "Actions"]
+        col_widths = [150, 300, 200, 200, 200, 150, 200]
 
         header_row = tk.Frame(table_frame, bg="#f5f5f5")
         header_row.pack(fill=tk.X)
@@ -188,10 +189,11 @@ class BillingManagementApp:
         for row in bills:
             bill = {
                 "ID": row[0],
-                "patient_name": row[1],
-                "amount": f"₱{row[2]:,.2f}",
-                "date_issued": row[3],
-                "status": row[4],
+                "patient_name": row[3],
+                "amount": f"₱{row[6]:,.2f}",
+                "date_issued": row[1],
+                "balance": f"₱{row[7]:,.2f}",
+                "status": row[9],
             }
             self.create_billing_row(parent, bill, col_widths)
 
@@ -205,7 +207,7 @@ class BillingManagementApp:
             "Overdue": "#F44336"
         }.get(bill["status"], "#9C27B0")
 
-        values = [bill["ID"], bill["patient_name"], bill["amount"], bill["date_issued"], bill["status"]]
+        values = [bill["ID"], bill["patient_name"], bill["amount"], bill["date_issued"], bill["balance"], bill["status"]]
         for i, val in enumerate(values):
             fg = status_color if i == 4 else "black"
             tk.Label(row_frame, text=val, font="Arial 10", bg="white", fg=fg,
@@ -216,7 +218,7 @@ class BillingManagementApp:
 
         tk.Button(actions_frame, text="View", font=self.small_font, bg="white", fg="black",
                   bd=1, relief=tk.SOLID, padx=10,
-                  command=lambda: print(f"View billing ID {bill['ID']}")).pack(side=tk.LEFT, padx=5)
+                  command=lambda: self.view_billing(bill["ID"])).pack(side=tk.LEFT, padx=5)
 
         tk.Button(actions_frame, text="Edit", font=self.small_font, bg="black", fg="white",
                   bd=0, relief=tk.FLAT, width=4,
@@ -233,16 +235,20 @@ class BillingManagementApp:
         for row in bills:
             bill = {
                 "ID": row[0],
-                "patient_name": row[1],
-                "amount": f"₱{row[2]:,.2f}",
-                "date_issued": row[3],
-                "status": row[4],
+                "patient_name": row[3],
+                "amount": f"₱{row[6]:,.2f}",
+                "date_issued": row[1],
+                "balance": f"₱{row[7]:,.2f}",
+                "status": row[9],
             }
-
             if query in str(bill["ID"]).lower() or query in bill["patient_name"].lower() or query in bill["amount"].lower() or query in bill["date_issued"].lower() or query in bill["status"].lower():
-                self.create_billing_row(self.scrollable_frame, bill, [150, 300, 200, 200, 150, 200])
-
-def main(id):
+                self.create_billing_row(self.scrollable_frame, bill, [150, 300, 200, 200, 200, 150, 200])
+    
+    def view_billing(self, billing_id):
+        self.root.destroy()
+        billingProfile.main(billing_id, self.id)
+    
+def main(id=8):
     root = tk.Tk()
     app = BillingManagementApp(root, id)
     root.mainloop()

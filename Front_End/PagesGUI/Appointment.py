@@ -159,7 +159,7 @@ class AppointmentManagementApp:
         table_frame.pack(fill=tk.BOTH, expand=True)
 
         headers = ["Appointment ID", "Patient Name", "Date/Time", "Provider", "Status", "Actions"]
-        col_widths = [150, 300, 300, 300, 300, 300, 300]
+        col_widths = [150, 250, 250, 250, 250, 250, 250]
 
         header_row = tk.Frame(table_frame, bg="#f5f5f5")
         header_row.pack(fill=tk.X)

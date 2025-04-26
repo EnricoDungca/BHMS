@@ -213,11 +213,11 @@ class InventoryManagementApp:
         for row in filtered_items:
             item = {
                 "ID": row[0],
-                "name": row[1],
-                "category": row[2],
-                "quantity": row[3],
-                "price": row[4],
-                "date_added": row[5],
+                "name": row[2],
+                "category": row[3],
+                "quantity": row[4],
+                "price": row[5],
+                "date_added": row[1],
             }
             self.create_inventory_row(parent, item, col_widths)
 
@@ -234,16 +234,15 @@ class InventoryManagementApp:
         actions_frame = tk.Frame(row_frame, bg="white")
         actions_frame.pack(side=tk.LEFT, padx=10)
 
-        tk.Button(actions_frame, text="View", font=self.small_font, bg="white", fg="black",
-                  bd=1, relief=tk.SOLID, padx=10,
-                  command=lambda: print(f"View inventory item {item['ID']}"))\
+        tk.Button(actions_frame, text="delete", font=self.small_font, bg="black", fg="white",
+                  bd=0, relief=tk.SOLID, padx=10,
+                  command=lambda: self.delete_inventory_item(item["ID"]))\
 .pack(side=tk.LEFT, padx=5)
 
-        tk.Button(actions_frame, text="Edit", font=self.small_font, bg="black", fg="white",
-                  bd=0, relief=tk.FLAT, width=4,
-                  command=lambda: print(f"Edit inventory item {item['ID']}"))\
-.pack(side=tk.LEFT)
-
+    def delete_inventory_item(self, item_id):
+        fnc.database_con().Record_delete("inventory", "id", item_id)
+        self.refresh_table()
+        
 def main(id):
     root = tk.Tk()
     app = InventoryManagementApp(root, id)

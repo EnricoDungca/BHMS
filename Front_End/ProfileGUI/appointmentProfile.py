@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, font, messagebox
+from tkinter import ttk, font, messagebox, filedialog
 from tkinter.font import Font
 from datetime import datetime
 import os
@@ -24,17 +24,18 @@ class ProfileViewer:
                 "Last Name": "Dela Cruz"
             },
             "Appointment Details": {
-                "Appointment Date": "2025-4-20",
+                "Appointment Date": "2025-04-20",
                 "Appointment Time": "10:30 AM",
                 "Appointment Type": "Regular Check-up",
                 "Preferred Doctor": "Dr. Santos - General Medicine",
-                "Department": "General Medicine"
+                "Department": "General Medicine",
+                "Notes": "Please fast for 8 hours prior."
             }
         }
         
         self.id = id
         # Profile image (can be passed in or use default)
-        self.profile_image = Image.open("Front_End\Pic\logo.png")
+        self.profile_image = Image.open("Front_End\\Pic\\logo.png")
         
         # Modern color scheme with black accent
         self.colors = {
@@ -99,9 +100,9 @@ class ProfileViewer:
         
         # Exit Button
         exit_btn = tk.Button(button_frame, text="Exit", font=("Arial", 12), 
-                            command=self.back, bg=self.colors["danger"], 
-                            fg="white", padx=20, pady=8, bd=0,
-                            activebackground="#c0392b", activeforeground="white")
+                             command=self.back, bg=self.colors["danger"], 
+                             fg="white", padx=20, pady=8, bd=0,
+                             activebackground="#c0392b", activeforeground="white")
         exit_btn.pack(side="right")
 
     def back(self):
@@ -118,7 +119,10 @@ class ProfileViewer:
         
         # Profile card
         card = ttk.Frame(container, style="Card.TFrame", width=card_width)
-        card.pack(pady=20, fill="both", expand=True, padx=(parent.winfo_screenwidth() - card_width) // 2)
+        card.pack(
+            pady=20, fill="both", expand=True,
+            padx=(parent.winfo_screenwidth() - card_width) // 2
+        )
         
         # Patient name and appointment status
         header_frame = tk.Frame(card, bg=self.colors["section_bg"])
@@ -132,13 +136,15 @@ class ProfileViewer:
         # Patient name
         name_font = Font(family="Arial", size=24, weight="bold")
         name_label = tk.Label(header_frame, text=full_name, font=name_font, 
-                             bg=self.colors["section_bg"], fg=self.colors["accent"])
+                              bg=self.colors["section_bg"], fg=self.colors["accent"])
         name_label.pack(anchor="w")
         
-        # Appointment status
+        # Appointment status (if you have a status field)
+        status = self.patient_data["Appointment Details"].get("status", "Scheduled")
         status_font = Font(family="Arial", size=14)
-        status_label = tk.Label(header_frame, text=f"Appointment {self.patient_data['Appointment Details']['status']}", font=status_font, 
-                               bg=self.colors["section_bg"], fg=self.colors["success"])
+        status_label = tk.Label(header_frame, text=f"Status: {status}", 
+                                font=status_font, bg=self.colors["section_bg"], 
+                                fg=self.colors["success"])
         status_label.pack(anchor="w", pady=(5, 0))
         
         # Separator
@@ -156,11 +162,13 @@ class ProfileViewer:
         right_col = tk.Frame(details_frame, bg=self.colors["section_bg"])
         right_col.pack(side="right", fill="both", expand=True, padx=(10, 0))
         
-        # Appointment date and time
+        # Appointment date & time
+        appt_date = self.patient_data["Appointment Details"]["Appointment Date"]
+        appt_time = self.patient_data["Appointment Details"]["Appointment Time"]
         self.create_detail_item(
             left_col, 
             "Appointment Date & Time", 
-            f"{self.format_date(self.patient_data['Appointment Details']['Appointment Date'])} at {self.patient_data['Appointment Details']['Appointment Time']}"
+            f"{self.format_date(appt_date)} at {appt_time}"
         )
         
         # Appointment type
@@ -174,128 +182,136 @@ class ProfileViewer:
         self.create_detail_item(
             right_col, 
             "Provider", 
-            self.patient_data["Appointment Details"]["Provider"]
+            self.patient_data["Appointment Details"]["Preferred Doctor"]
         )
         
         # Department
         self.create_detail_item(
             right_col,
             "Location",
-            "VMUF Birhting Home"
+            "SITIO AGTAS, SAN JUAN,\n San Carlos City, \nPhilippines, 2420. \nVMUF Birthing Home"
         )
         
         # Notes
+        notes = self.patient_data["Appointment Details"].get("Notes","")
         self.create_detail_item(
             left_col,
             "Notes",
-            self.patient_data["Appointment Details"]["Notes"]
+            notes
         )
         
         # Image and instructions section
         image_frame = tk.Frame(card, bg=self.colors["section_bg"], height=150)
         image_frame.pack(fill="x", padx=30, pady=(20, 30))
         
-        # Patient image (either provided or default)
+        # Patient image (or initials)
         image_container = tk.Frame(image_frame, bg=self.colors["section_bg"], width=150, height=150)
         image_container.pack(side="left")
-        image_container.pack_propagate(False)  # Prevent the frame from shrinking
+        image_container.pack_propagate(False)
         
         if self.profile_image:
-            # If an image was provided, use it
             img = ImageTk.PhotoImage(self.profile_image.resize((150, 150), Image.LANCZOS))
             img_label = tk.Label(image_container, image=img, bg=self.colors["section_bg"])
-            img_label.image = img  # Keep a reference to prevent garbage collection
+            img_label.image = img
             img_label.pack(fill="both", expand=True)
         else:
-            # Create a default placeholder with patient initials
             initials = f"{first_name[0]}{last_name[0]}"
-            initials_label = tk.Label(image_container, text=initials, font=("Arial", 48, "bold"),
-                                     bg=self.colors["accent"], fg="white")
+            initials_label = tk.Label(
+                image_container, text=initials,
+                font=("Arial", 48, "bold"),
+                bg=self.colors["accent"], fg="white"
+            )
             initials_label.pack(fill="both", expand=True)
         
-        # Instructions
         instructions_frame = tk.Frame(image_frame, bg=self.colors["section_bg"])
         instructions_frame.pack(side="left", fill="both", expand=True, padx=20)
-        
         instructions_text = (
-            "\nPlease arrive 10 minutes before your appointment.\n"
+            "\nPlease arrive 10 minutes early.\n"
             "Bring a valid ID for verification.\n"
-            "Contact 0912345678 or email BHMS@example.com if you need to reschedule.\n"
-            "Thank you for choosing VMUF Birhting Home for your medical needs."
+            "Contact 0907 762 1867 or email 1x7r4@example.com if you need to reschedule.\n"
+            "Thank you for choosing VMUF Birthing Home!"
         )
-        
-        instructions = tk.Label(instructions_frame, text=instructions_text, font=("Arial", 11), 
-                              bg=self.colors["section_bg"], fg=self.colors["text"],
-                              justify="left", wraplength=400)
+        instructions = tk.Label(
+            instructions_frame,
+            text=instructions_text,
+            font=("Arial", 11),
+            bg=self.colors["section_bg"],
+            fg=self.colors["text"],
+            justify="left", wraplength=400
+        )
         instructions.pack(anchor="w")
         
         return card
 
     def create_detail_item(self, parent, label_text, value_text):
-        # Container
         container = tk.Frame(parent, bg=self.colors["section_bg"], pady=10)
         container.pack(fill="x")
         
-        # Label
-        label = tk.Label(container, text=label_text, font=("Arial", 12, "bold"), 
-                        bg=self.colors["section_bg"], fg=self.colors["text"])
-        label.pack(anchor="w")
+        tk.Label(
+            container, text=label_text,
+            font=("Arial", 12, "bold"),
+            bg=self.colors["section_bg"],
+            fg=self.colors["text"]
+        ).pack(anchor="w")
         
-        # Value
-        value = tk.Label(container, text=value_text, font=("Arial", 14), 
-                        bg=self.colors["section_bg"], fg=self.colors["accent"])
-        value.pack(anchor="w", pady=(5, 0))
+        tk.Label(
+            container, text=value_text,
+            font=("Arial", 14),
+            bg=self.colors["section_bg"],
+            fg=self.colors["accent"]
+        ).pack(anchor="w", pady=(5, 0))
 
     def format_date(self, date_str):
-        # Convert YYYY-MM-DD to a more readable format
         try:
-            year, month, day = date_str.split("-")
-            date_obj = datetime(int(year), int(month), int(day))
-            return date_obj.strftime("%B %d, %Y")
+            y, m, d = map(int, date_str.split("-"))
+            return datetime(y, m, d).strftime("%B %d, %Y")
         except:
-            return date_str
+            return str(date_str)
 
     def save_as_png(self):
         try:
-            # Create a directory for saved appointments if it doesn't exist
-            save_dir = "saved_appointments"
-            if not os.path.exists(save_dir):
-                os.makedirs(save_dir)
-            
-            # Generate filename based on patient name and date
-            first_name = self.patient_data["Patient Information"]["First Name"]
-            last_name = self.patient_data["Patient Information"]["Last Name"]
-            date_str = self.patient_data["Appointment Details"]["Appointment Date"].replace("-", "")
-            
-            filename = f"{save_dir}/{last_name}_{first_name}_{date_str}.png"
-            
-            # Hide buttons temporarily for clean screenshot
+            # Make sure all geometry is up to date
+            self.root.update_idletasks()
             self.root.update()
-            
-            # Get the position of the card on screen
+
+            # Build a sane default filename
+            raw_date = self.patient_data["Appointment Details"]["Appointment Date"]
+            if isinstance(raw_date, datetime):
+                date_text = raw_date.strftime("%Y-%m-%d")
+            else:
+                date_text = str(raw_date)
+            date_str = date_text.replace("-", "")
+
+            first = self.patient_data["Patient Information"]["First Name"]
+            last  = self.patient_data["Patient Information"]["Last Name"]
+            default_name = f"{last}_{first}_{date_str}.png"
+
+            # Ask the user where to save
+            file_path = filedialog.asksaveasfilename(
+                title="Save Appointment as PNG",
+                defaultextension=".png",
+                filetypes=[("PNG Image","*.png")],
+                initialfile=default_name
+            )
+            if not file_path:
+                return  # user cancelled
+
+            # Capture just the card area
             x = self.card_frame.winfo_rootx()
             y = self.card_frame.winfo_rooty()
-            width = self.card_frame.winfo_width()
-            height = self.card_frame.winfo_height()
-            
-            # Take screenshot of the card area
-            screenshot = ImageGrab.grab(bbox=(x, y, x+width, y+height))
-            
-            # Save the image
-            screenshot.save(filename)
-            
-            # Show success message
-            messagebox.showinfo(
-                "Success", 
-                f"Appointment saved as PNG!\nLocation: {os.path.abspath(filename)}"
-            )
-            
+            w = self.card_frame.winfo_width()
+            h = self.card_frame.winfo_height()
+            img = ImageGrab.grab(bbox=(x, y, x+w, y+h))
+            img.save(file_path)
+
+            messagebox.showinfo("Saved", f"Appointment saved!\n{file_path}")
         except Exception as e:
-            messagebox.showerror("Error", f"Could not save image: {str(e)}")
+            messagebox.showerror("Error", f"Could not save image:\n{e}")
+
 
 def show_profile(ID, staffID):
     data = fnc.database_con().read("appointment", "*")
-    print(staffID)
+    patient_data = None
     for row in data:
         if row[0] == ID:
             patient_data = {
@@ -308,35 +324,20 @@ def show_profile(ID, staffID):
                     "Appointment Date": row[6],
                     "Appointment Time": row[7],
                     "Appointment Type": row[8],
-                    "Provider": row[9],
-                    "Notes": row[11]
+                    "Preferred Doctor": row[9],
+                    "Notes": row[11] if len(row) > 12 else ""
                 }
             }
             break
-    
+
+    if not patient_data:
+        messagebox.showerror("Error", "Appointment not found.")
+        return
+
     root = tk.Tk()
-    app = ProfileViewer(root, staffID, patient_data)
+    ProfileViewer(root, staffID, patient_data)
     root.mainloop()
 
-# For testing purposes
+# For testing
 if __name__ == "__main__":
-    show_profile()
-    
-    # # Sample data
-    # sample_data = {
-    #     "Patient Information": {
-    #         "First Name": "Juan",
-    #         "Last Name": "Dela Cruz"
-    #     },
-    #     "Appointment Details": {
-    #         "Appointment Date": "2025-4-20",
-    #         "Appointment Time": "10:30 AM",
-    #         "Appointment Type": "Regular Check-up",
-    #         "Preferred Doctor": "Dr. Santos - General Medicine",
-    #         "Department": "General Medicine"
-    #     }
-    # }
-    
-    
-    # # Or without an image (will use initials):
-    # show_profile(sample_data)
+    show_profile(1, 8)
