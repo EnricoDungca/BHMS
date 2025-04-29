@@ -325,38 +325,56 @@ class BillingForm:
             messagebox.showerror("Error", "Selected patient not found.")
             return
 
-        item_details = f"\n".join(f"{name}  x{qty}  @ {unit:.2f} = {total:.2f}" for name, qty, unit, total in self.item_rows)
+        item_details = "\n".join(f"{name}  x{qty}  @ {unit:.2f} = {total:.2f}" for name, qty, unit, total in self.item_rows)
 
-        
-        itemID = [row[0] for row in self.inventory]
-        item = [row[2] for row in self.inventory]
-        itemquantity = [row[4] for row in self.inventory]
-        
-        for name, qty in self.item_rows:
-            if name in item:
-                deduct = itemquantity[item.index(name)] - qty
-            
-        
-        fnc.database_con().Record_edit(
-            "inventory",
-            "quantity",
-            deduct,
-            "id",
-            itemID[item.index(name)]
-        )
-        
+        # Update inventory per item
+        for name, qty, unit, total in self.item_rows:
+            # Find the inventory entry
+            for row in self.inventory:
+                item_id = row[0]
+                item_name = row[2]
+                item_qty = row[4]
+                item_price = row[5]
+                if name == item_name:
+                    try:
+                        new_qty = int(item_qty) - int(qty)
+                        new_total_price = float(item_price) * new_qty
+                    except ValueError:
+                        messagebox.showerror("Error", f"Invalid quantity or price data for item '{name}'")
+                        return
+
+                    fnc.database_con().Record_edit(
+                        "inventory",
+                        "quantity",
+                        new_qty,
+                        "id",
+                        item_id
+                    )
+                    fnc.database_con().Record_edit(
+                        "inventory",
+                        "totalPrice",
+                        new_total_price,
+                        "id",
+                        item_id
+                    )
+                    break
+            else:
+                messagebox.showerror("Error", f"Item '{name}' not found in inventory.")
+                return
+
+        # Insert billing record
         fnc.database_con().insert(
             "billing",
             (
-                'patientID', 
-                'patientName', 
-                'itemused', 
-                'totalpayment', 
-                'totalcharges', 
-                'balance', 
-                'paymentMethod', 
-                'paymentStatus', 
-                'notes', 
+                'patientID',
+                'patientName',
+                'itemused',
+                'totalpayment',
+                'totalcharges',
+                'balance',
+                'paymentMethod',
+                'paymentStatus',
+                'notes',
                 'staffID'
             ),
             [
@@ -372,7 +390,9 @@ class BillingForm:
                 self.staff_id,
             ],
         )
+
         self._clear_form()
+
 
     # ───────────────── misc ─────────────────
     def _clear_form(self) -> None:

@@ -1,0 +1,42 @@
+[
+  {
+    "bed_id": "Bed 1",
+    "occupant": "Enrico"
+  },
+  {
+    "bed_id": "Bed 2",
+    "occupant": null
+  },
+  {
+    "bed_id": "Bed 3",
+    "occupant": null
+  },
+  {
+    "bed_id": "Bed 4",
+    "occupant": null
+  },
+  {
+    "bed_id": "Bed 5",
+    "occupant": null
+  },
+  {
+    "bed_id": "Bed 6",
+    "occupant": null
+  },
+  {
+    "bed_id": "Bed 7",
+    "occupant": null
+  },
+  {
+    "bed_id": "Bed 8",
+    "occupant": null
+  },
+  {
+    "bed_id": "Bed 9",
+    "occupant": null
+  },
+  {
+    "bed_id": "Bed 10",
+    "occupant": null
+  }
+]

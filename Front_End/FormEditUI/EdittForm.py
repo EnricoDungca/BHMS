@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from tkcalendar import DateEntry
 import sys
 import os
 
@@ -112,6 +113,7 @@ class EditForm:
     def _combo(self, parent, var, options):
         combobox = ttk.Combobox(parent, textvariable=var, values=options, state="readonly", width=38)
         return combobox
+    
 
     def load_and_populate(self):
         row = next((r for r in self.db.read(self.tableName, "*") if str(r[0]) == str(self.record_id)), None)
@@ -133,16 +135,32 @@ class EditForm:
             if field == "paymentStatus":
                 options = ["Paid", "Unpaid", "Pending"]
                 ent = self._combo(self.form_frame, var, options)
+
             elif field == "paymentMethod":
                 options = ["Cash", "Insurance"]
                 ent = self._combo(self.form_frame, var, options)
+
+            elif field == "apptDate":
+                ent = DateEntry(self.form_frame, textvariable=var, width=40, background='darkblue',
+                                foreground='white', borderwidth=2, date_pattern='yyyy-mm-dd')
+
+            elif field == "apptType":
+                options = ["Check-up", "Follow-up", "Consultation", "Emergency", "Delivery"]
+                ent = self._combo(self.form_frame, var, options)
+
+            elif field == "status":
+                options = ["Pending", "Confirmed", "Completed", "Cancelled"]
+                ent = self._combo(self.form_frame, var, options)
+
             else:
                 ent = ttk.Entry(self.form_frame, textvariable=var, width=40)
 
             ent.grid(row=idx + 1, column=1, padx=10, pady=6, sticky="w")
 
             if field == "ID" or field == "datesave":
-                ent.config(state="disabled")
+                if isinstance(ent, ttk.Entry):  # Avoid disabling composite widgets like time_frame
+                    ent.config(state="disabled")
+
             if field == "password" and value:
                 try:
                     decrypted = fnc.Security().decrypt_str(value)

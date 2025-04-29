@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import font, ttk
+from tkinter import font, ttk, messagebox
 import sys
 from datetime import date
 
@@ -13,6 +13,7 @@ from Front_End.PagesGUI import Appointment
 from Front_End.PagesGUI import medicalRecord
 from Front_End.PagesGUI import Billing
 from Front_End.FormGUI import inventoryForm
+from Front_End.FormEditUI import EdittForm
 
 class InventoryManagementApp:
     def __init__(self, root, id):
@@ -233,17 +234,29 @@ class InventoryManagementApp:
 
         actions_frame = tk.Frame(row_frame, bg="white")
         actions_frame.pack(side=tk.LEFT, padx=10)
-
-        tk.Button(actions_frame, text="delete", font=self.small_font, bg="black", fg="white",
+        
+        tk.Button(actions_frame, text="Edit", font=self.small_font, bg="black", fg="white",
+                  bd=0, relief=tk.SOLID, padx=10,
+                  command=lambda: self.edit_inventory_item(item["ID"]))\
+.pack(side=tk.LEFT, padx=5)
+        
+        tk.Button(actions_frame, text="Delete", font=self.small_font, bg="black", fg="white",
                   bd=0, relief=tk.SOLID, padx=10,
                   command=lambda: self.delete_inventory_item(item["ID"]))\
 .pack(side=tk.LEFT, padx=5)
 
+    def edit_inventory_item(self, item_id):
+        try:
+            self.root.destroy()
+            EdittForm.main(self.id, item_id, "inventory", "Inventory")
+        except Exception as e: 
+            messagebox.showerror("Error", e)
+    
     def delete_inventory_item(self, item_id):
         fnc.database_con().Record_delete("inventory", "id", item_id)
         self.refresh_table()
         
-def main(id):
+def main(id=8):
     root = tk.Tk()
     app = InventoryManagementApp(root, id)
     root.mainloop()

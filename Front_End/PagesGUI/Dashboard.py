@@ -14,6 +14,8 @@ from Front_End.PagesGUI import medicalRecord
 from Front_End.PagesGUI import Billing
 from Front_End.PagesGUI import Inventory
 from Front_End.FormGUI import emailSender
+from Front_End.FormEditUI import EdittForm
+from Front_End.PagesGUI import bedTracking
 
 class DashboardApp(tk.Tk):
     def __init__(self, id):
@@ -136,6 +138,10 @@ class DashboardApp(tk.Tk):
         send_email_btn = tk.Button(header_frame, command= self.send_email,text="Send Email", font=("Helvetica", 10), bg="#f4f5f7", fg="#666", cursor="hand2")
         send_email_btn.pack(side="right", padx=5)
         
+        # Bed tracking
+        send_email_btn = tk.Button(header_frame, command= self.beds,text="Bed Tracking", font=("Helvetica", 10), bg="#f4f5f7", fg="#666", cursor="hand2")
+        send_email_btn.pack(side="right", padx=5)
+        
         date_label = tk.Label(header_frame, text=date.today().strftime("%B %d, %Y"),
                               font=("Helvetica", 10), bg="#f4f5f7")
         date_label.pack(side="right")
@@ -213,7 +219,7 @@ class DashboardApp(tk.Tk):
         for appt in fnc.database_con().read("appointment", "*"):
             # Only display appointments for today or scheduled appointments from another day
             if str(appt[6]) == str(date.today().strftime("%Y-%m-%d")):
-                data = {"name": appt[2], "datetime": f"{appt[6]} - {appt[7]}", "type": appt[10]}
+                data = {"ID": appt[0], "name": f"{appt[2]} {appt[3]}", "datetime": f"{appt[6]} - {appt[7]}", "type": appt[8], "status": appt[10]}
                 self.create_appointment_card(scrollable_frame, data)
         
         # Enable mouse wheel scrolling on Windows and MacOS
@@ -237,7 +243,7 @@ class DashboardApp(tk.Tk):
 
         type_label = tk.Label(
             left,
-            text=f"{appointment['datetime']} - {appointment['type']}",
+            text=f"{appointment['datetime']} - {appointment['type']} - {appointment['status']}",
             font=("Helvetica", 9),
             bg="white",
             fg="#666"
@@ -247,14 +253,37 @@ class DashboardApp(tk.Tk):
         right = tk.Frame(content_frame, bg="white")
         right.pack(side="right")
 
-        ttk.Button(right, text="Reschedule").pack(side="left", padx=5)
-        ttk.Button(right, text="Check In").pack(side="left")
+        ttk.Button(right, text="Reschedule", command= lambda: self.reschedule(appointment["ID"])).pack(side="left", padx=5)
+        ttk.Button(right, text="Check In", command= lambda: self.check_in(appointment["ID"])).pack(side="left")
+    
+    def reschedule(self, id):
+        self.destroy()
+        EdittForm.main(self.id, id, "appointment", "Appointment")
+        
+    def check_in(self, id):
+        try:
+            
+            for data in fnc.database_con().read("appointment", "*"):
+                if data[0] == id:
+                    if data[10] == "Completed":
+                        messagebox.showerror("Error", "Appointment already checked in!")
+                        return
+            
+            fnc.database_con().Record_edit("appointment", "status", "Completed", "ID", id)
+            messagebox.showinfo("Success", "Appointment checked in successfully!")
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not update record.\n{e}")
+            return
 
     def send_email(self):
         self.destroy()
         emailSender.main(self.id)
     
-def main(id):
+    def beds(self):
+        self.destroy()
+        bedTracking.main(self.id)
+    
+def main(id=8):
     app = DashboardApp(id)
     app.mainloop()
 

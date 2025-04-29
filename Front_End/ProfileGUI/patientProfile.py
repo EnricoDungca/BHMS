@@ -102,16 +102,6 @@ class PatientProfileApp:
                          fg="white", font=('Arial', 14, 'bold'))
         title.pack(side='left', padx=5)
 
-    def upload_logo(self):
-        path = filedialog.askopenfilename(title="Select Logo Image",
-                                          filetypes=[('PNG Images', '*.png'), ('GIF Images', '*.gif'), ('All files', '*.*')])
-        if path:
-            try:
-                self.logo_image = PhotoImage(file=path)
-                self.footer_logo_label.configure(image=self.logo_image, text="")
-                self.footer_logo_label.image = self.logo_image
-            except Exception:
-                messagebox.showerror("Error", "Could not load selected image.")
 
     def save_profile_as_image(self):
         self.root.update()

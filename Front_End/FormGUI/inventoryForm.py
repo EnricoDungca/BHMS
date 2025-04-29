@@ -146,7 +146,7 @@ class InventoryForm:
 
         # temporarily enable, write, then disable again
         self.total_entry.config(state="normal")
-        self.total_var.set(f"{total:,.2f}")
+        self.total_var.set(total)
         self.total_entry.config(state="disabled")
 
     # ─────────────────────  BUTTON HANDLERS ─────────────────────
