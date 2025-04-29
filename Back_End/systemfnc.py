@@ -68,7 +68,7 @@ class authentication():
             for row in database_con().read("admin", "*"):
                 if self.email == row[2]:
                     if self.password == row[3]:
-                        return True
+                        return row[0], True
             return False
         except Exception as e:
             messagebox.showerror("Error", str(e))

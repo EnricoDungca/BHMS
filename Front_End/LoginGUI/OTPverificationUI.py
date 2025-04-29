@@ -360,7 +360,7 @@ class OTPVerificationScreen:
         else:
             if self.verify:
                 self.root.destroy()
-                accountManagement.main(self.id)
+                accountManagement.main()
             else:
                 self.root.destroy()
                 Login.LoginUI() 

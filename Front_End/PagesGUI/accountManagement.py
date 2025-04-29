@@ -198,7 +198,7 @@ class AccountManagementApp:
 
     def edit_account(self, id):
         self.root.destroy()
-        EdittForm.main(id, "accounts")
+        EdittForm.main(None, id, "accounts", "accountManagement")
     
     def perform_search(self, event=None):
         query = self.search_entry.get().lower().strip()
