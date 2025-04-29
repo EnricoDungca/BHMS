@@ -8,6 +8,7 @@ sys.path.insert(0, '\\BHMS')
 from Back_End import systemfnc as fnc
 from Front_End.LoginGUI import Login
 from Front_End.FormGUI import registerNewAccount
+from Front_End.FormEditUI import EdittForm
 
 class AccountManagementApp:
     def __init__(self, root):
@@ -192,9 +193,13 @@ class AccountManagementApp:
 
         tk.Button(actions_frame, text="Edit", font=self.small_font, bg="black", fg="white",
                   bd=0, relief=tk.FLAT, width=4,
-                  command=lambda: print(f"Edit account {account['ID']}"))\
+                  command= lambda: self.edit_account(account["ID"]))\
 .pack(side=tk.LEFT)
 
+    def edit_account(self, id):
+        self.root.destroy()
+        EdittForm.main(id, "accounts")
+    
     def perform_search(self, event=None):
         query = self.search_entry.get().lower().strip()
         for widget in self.scrollable_frame.winfo_children():

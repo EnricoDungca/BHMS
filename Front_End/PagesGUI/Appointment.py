@@ -14,6 +14,7 @@ from Front_End.PagesGUI import Billing
 from Front_End.PagesGUI import Inventory
 from Front_End.FormGUI import AppointmentForm
 from Front_End.ProfileGUI import appointmentProfile
+from Front_End.FormEditUI import EdittForm
 
 class AppointmentManagementApp:
     def __init__(self, root, id):
@@ -224,9 +225,13 @@ class AppointmentManagementApp:
 
         tk.Button(actions_frame, text="Edit", font=self.small_font, bg="black", fg="white",
                   bd=0, relief=tk.FLAT, width=4,
-                  command=lambda: print(f"Edit appointment {appointment['ID']}"))\
+                  command=lambda: self.edit_appointment(appointment["ID"]))\
 .pack(side=tk.LEFT)
 
+    def edit_appointment(self, ID):
+        self.root.destroy()
+        EdittForm.main(self.id, ID, "appointment", "Appointment")
+    
     def perform_search(self, event=None):
         query = self.search_entry.get().lower().strip()
         for widget in self.scrollable_frame.winfo_children():

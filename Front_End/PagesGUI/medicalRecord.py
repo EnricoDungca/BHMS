@@ -13,6 +13,8 @@ from Front_End.PagesGUI import Appointment
 from Front_End.PagesGUI import Billing
 from Front_End.PagesGUI import Inventory
 from Front_End.FormGUI import medicalRecordForm
+from Front_End.FormEditUI import EdittForm
+from Front_End.ProfileGUI import medicalProfile
 
 class MedicalRecordManagementApp:
     def __init__(self, root, id):
@@ -221,17 +223,17 @@ class MedicalRecordManagementApp:
         for row in records:
             record = {
                 "ID": row[0],
-                "patient_name": row[1],
-                "condition": row[2],
-                "date": row[3],
-                "doctor": row[4],
+                "patient_name": row[3],
+                "condition": row[10],
+                "date": row[1],
+                "provider": f"ID: {row[12]}",
             }
             self.create_record_row(parent, record, col_widths)
 
     def create_record_row(self, parent, record, col_widths):
         row_frame = tk.Frame(parent, bg="white")
         row_frame.pack(fill=tk.X, pady=3)
-        values = [record["ID"], record["patient_name"], record["condition"], record["date"], record["doctor"]]
+        values = [record["ID"], record["patient_name"], record["condition"], record["date"], record["provider"]]
         for i, val in enumerate(values):
             tk.Label(row_frame, text=val, font=self.table_font, bg="white",
                      width=col_widths[i] // 10, anchor="w").pack(side=tk.LEFT)
@@ -239,10 +241,19 @@ class MedicalRecordManagementApp:
         actions_frame.pack(side=tk.LEFT, padx=10)
         tk.Button(actions_frame, text="View", font=self.small_font,
                   bg="white", fg="black", bd=1, relief=tk.SOLID, padx=10,
-                  command=lambda: print(f"View record {record['ID']}")).pack(side=tk.LEFT, padx=5)
+                  command=lambda: self.view_checkup(record["ID"])).pack(side=tk.LEFT, padx=5)
         tk.Button(actions_frame, text="Edit", font=self.small_font,
                   bg="black", fg="white", bd=0, relief=tk.FLAT, width=4,
-                  command=lambda: print(f"Edit record {record['ID']}")).pack(side=tk.LEFT)
+                  command=lambda: self.edit_checkup(record["ID"])).pack(side=tk.LEFT)
+    
+    def view_checkup(self, record_id):
+        self.root.destroy()
+        medicalProfile.main(record_id, self.id, "checkup")
+    
+    def edit_checkup(self, record_id):
+        self.root.destroy()
+        EdittForm.main(self.id, record_id, "checkup", "medicalRecord")
+        
 
     def create_nsd_table(self, parent):
         # Build NSD Records table with similar UI to Check Up.
@@ -280,17 +291,17 @@ class MedicalRecordManagementApp:
         for row in records:
             record = {
                 "ID": row[0],
-                "patient_name": row[1],
-                "delivery_date": row[2],
-                "doctor": row[3],
-                "midwife": row[4]
+                "patient_name": row[3],
+                "delivery_date": row[4],
+                "timeofbirth": row[5],
+                "midwife": f"ID: {row[9]}"
             }
             self.create_nsd_record_row(parent, record, col_widths)
 
     def create_nsd_record_row(self, parent, record, col_widths):
         row_frame = tk.Frame(parent, bg="white")
         row_frame.pack(fill=tk.X, pady=3)
-        values = [record["ID"], record["patient_name"], record["delivery_date"], record["doctor"], record["midwife"]]
+        values = [record["ID"], record["patient_name"], record["delivery_date"], record["timeofbirth"], record["midwife"]]
         for i, val in enumerate(values):
             tk.Label(row_frame, text=val, font=self.table_font, bg="white",
                      width=col_widths[i] // 10, anchor="w").pack(side=tk.LEFT)
@@ -298,10 +309,18 @@ class MedicalRecordManagementApp:
         actions_frame.pack(side=tk.LEFT, padx=10)
         tk.Button(actions_frame, text="View", font=self.small_font,
                   bg="white", fg="black", bd=1, relief=tk.SOLID, padx=10,
-                  command=lambda: print(f"View NSD record {record['ID']}")).pack(side=tk.LEFT, padx=5)
+                  command=lambda: self.view_nsd(record["ID"])).pack(side=tk.LEFT, padx=5)
         tk.Button(actions_frame, text="Edit", font=self.small_font,
                   bg="black", fg="white", bd=0, relief=tk.FLAT, width=4,
-                  command=lambda: print(f"Edit NSD record {record['ID']}")).pack(side=tk.LEFT)
+                  command=lambda: self.edit_nsd(record["ID"])).pack(side=tk.LEFT)
+    
+    def view_nsd(self, record_id):
+        self.root.destroy()
+        medicalProfile.main(record_id, self.id, "nsd")
+    
+    def edit_nsd(self, record_id):
+        self.root.destroy()
+        EdittForm.main(self.id, record_id, "nsd", "medicalRecord")
 
     def refresh_checkup_table(self):
         # Retrieve the search query, clear the container, and repopulate with filtered Check Up records.
@@ -342,7 +361,7 @@ class MedicalRecordManagementApp:
             if query in record_text or query in ["", "search nsd records..."]:
                 self.create_nsd_record_row(self.nsd_records_container, record, self.nsd_col_widths)
 
-def main(id):
+def main(id=8):
     root = tk.Tk()
     app = MedicalRecordManagementApp(root, id)
     root.mainloop()

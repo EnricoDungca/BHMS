@@ -178,7 +178,6 @@ class database_con:
 
             self.mydb.commit()
 
-            messagebox.showinfo("Success", "Table updated successfully.")
         except mysql.connector.Error as e:
             messagebox.showerror("Error", "Error: " + str(e))
         finally:
@@ -229,10 +228,28 @@ class database_con:
             return []
         finally:
             cursor.close()
+        
+    def column_names(self, Tablename):
+        database_con.check_connection(self)  # Ensure database connection is active
+        if not self.mydb:
+            messagebox.showwarning("Warning", "No active database connection.")
+            return []  # Return an empty list if no connection
 
-def read_data():
-    data1 = database_con().read("accounts", "*")
-    data2 = database_con().read("admin", "*")
-    data3 = database_con().read("appointment", "*")
-    data4 = database_con().read("registration", "*")
-    
+        try:
+            cursor = self.mydb.cursor()
+            sql = f"SHOW COLUMNS FROM {Tablename}"
+            cursor.execute(sql)
+
+            result = cursor.fetchall()  # Fetch all rows at once
+
+            if not result:  # If no data is found
+                print("No records found.")
+                return []
+
+            # for row in result:
+            return result  # Return all fetched rows
+        except mysql.connector.Error as e:
+            messagebox.showerror("Error", "Error: " + str(e))
+            return []
+        finally:
+            cursor.close()

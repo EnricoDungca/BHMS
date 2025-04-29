@@ -13,6 +13,8 @@ from Front_End.PagesGUI import medicalRecord
 from Front_End.PagesGUI import Billing
 from Front_End.PagesGUI import Inventory
 from Front_End.FormGUI import registerForm
+from Front_End.FormEditUI import EdittForm
+from Front_End.ProfileGUI import patientProfile
 
 
 class PatientManagementApp:
@@ -221,15 +223,24 @@ class PatientManagementApp:
 
         tk.Button(actions_frame, text="View", font=self.small_font, bg="white", fg="black",
                   bd=1, relief=tk.SOLID, padx=10,
-                  command=lambda: print(f"View patient {patient['ID']}"))\
+                  command=lambda: self.view_record(patient["ID"]))\
 .pack(side=tk.LEFT, padx=5)
 
         tk.Button(actions_frame, text="Edit", font=self.small_font, bg="black", fg="white",
                   bd=0, relief=tk.FLAT, width=4,
-                  command=lambda: print(f"Edit patient {patient['ID']}"))\
+                  command=lambda: self.edit_record(patient["ID"]))\
 .pack(side=tk.LEFT)
-
+    
+    def view_record(self, id):
+        self.root.destroy()
+        patientProfile.main(id, self.id)
+    
+    def edit_record(self, id):
+        self.root.destroy()
+        EdittForm.main(self.id, id, "registration", "patientRegistration")
+            
 def main(id):
+    print(id)
     root = tk.Tk()
     app = PatientManagementApp(root, id)
     root.mainloop()

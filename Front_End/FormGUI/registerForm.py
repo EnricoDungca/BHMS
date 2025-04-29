@@ -202,6 +202,12 @@ class PatientRegistrationForm:
                                   background=self.colors["accent"], foreground="white", 
                                   borderwidth=0, date_pattern='yyyy-mm-dd')
                 entry.pack(fill="x", ipady=4)
+            elif field == "Gender":
+                var.set("Select Gender")
+                sex = ["Male", "Female"]
+                dropdown = ttk.Combobox(field_frame, textvariable=var, values=sex, 
+                                       font=("Arial", 11), state="readonly")
+                dropdown.pack(fill="x", ipady=4)
             else:
                 entry = tk.Entry(field_frame, textvariable=var, font=("Arial", 11), 
                                 bd=0, highlightthickness=1, 

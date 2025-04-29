@@ -1,7 +1,3 @@
-"""Billing Form GUI – with Total Payment ⇄ Balance interaction."""
-
-from __future__ import annotations
-
 import sys
 import tkinter as tk
 from pathlib import Path
@@ -336,7 +332,7 @@ class BillingForm:
         item = [row[2] for row in self.inventory]
         itemquantity = [row[4] for row in self.inventory]
         
-        for name, qty, unit, total in self.item_rows:
+        for name, qty in self.item_rows:
             if name in item:
                 deduct = itemquantity[item.index(name)] - qty
             

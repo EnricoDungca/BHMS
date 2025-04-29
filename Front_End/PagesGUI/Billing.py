@@ -13,6 +13,7 @@ from Front_End.PagesGUI import Appointment
 from Front_End.PagesGUI import Inventory
 from Front_End.FormGUI import billingForm
 from Front_End.ProfileGUI import billingProfile
+from Front_End.FormEditUI import EdittForm
 
 class BillingManagementApp:
     def __init__(self, root, id):
@@ -222,8 +223,12 @@ class BillingManagementApp:
 
         tk.Button(actions_frame, text="Edit", font=self.small_font, bg="black", fg="white",
                   bd=0, relief=tk.FLAT, width=4,
-                  command=lambda: print(f"Edit billing ID {bill['ID']}")).pack(side=tk.LEFT)
+                  command= lambda: self.edit_billing(bill["ID"])).pack(side=tk.LEFT)
 
+    def edit_billing(self, billing_id):
+        self.root.destroy()
+        EdittForm.main(self.id, billing_id, "billing", "Billing")
+    
     def perform_search(self, event=None):
         query = self.search_entry.get().lower().strip()
         for widget in self.scrollable_frame.winfo_children():
@@ -248,7 +253,7 @@ class BillingManagementApp:
         self.root.destroy()
         billingProfile.main(billing_id, self.id)
     
-def main(id=8):
+def main(id):
     root = tk.Tk()
     app = BillingManagementApp(root, id)
     root.mainloop()

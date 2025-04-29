@@ -259,24 +259,28 @@ class OTPVerificationScreen:
     
     def resend_otp(self):
         """Resend the OTP"""
-        # Here you would typically call your backend to resend the OTP
-        self.verify_button.config(state="enabled")
-        self.send_otp()
+        # Send a new OTP and update the code
+        self.code = self.send_otp()  # <--- FIX: save the new code!
+
         # Reset the timer
         self.time_remaining = self.timeout
         if not self.timer_running:
             self.start_timer()
-        
+
         # Clear all entries
         for entry in self.entries:
             entry.delete(0, tk.END)
-        
+
         # Focus on the first entry
         if self.entries:
             self.entries[0].focus_set()
-        
+
+        # Enable the verify button again
+        self.verify_button.config(state="enabled")
+
         # Show confirmation message
         self.show_message("A new code has been sent")
+
     
     def start_timer(self):
         """Start the countdown timer"""
@@ -322,7 +326,7 @@ class OTPVerificationScreen:
         # Clear the UI
         for widget in self.content_frame.winfo_children():
             widget.destroy()
-        
+
         # Show success message
         success_label = ttk.Label(
             self.content_frame,
@@ -332,16 +336,17 @@ class OTPVerificationScreen:
             style='TLabel'
         )
         success_label.pack(pady=(0, 20))
-        
+
         message_label = ttk.Label(
             self.content_frame,
             text="Verification Successful",
             style='Title.TLabel'
         )
         message_label.pack()
-        
-        # Close after 2 seconds and redirect
-        self.root.after(2000, self.redirect())
+
+        # Close after 2 seconds and redirect properly
+        self.root.after(2000, self.redirect)
+
     
     def redirect(self):
         """Redirect after success"""
