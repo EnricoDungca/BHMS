@@ -113,7 +113,7 @@ import re
 
       1. Open terminal or cmd
       2. choose directory where you want to clone the repository and
-      3. Type This: gh repo clone EnricoDungca/BHMSapp
+      3. Type This: git clone EnricoDungca/BHMSapp
 
     - import ".spl" file to localhost/phpmyadmin:
 
@@ -121,3 +121,16 @@ import re
       2.  after download Open Xampp and start Apache and MySql
       3.  And go to browser type "http://localhost/phpmyadmin/index.php" or open xamp and click "Admin" on MySql.
       4.  After opening look for "Import" and "Choose File" choose the .spl file that you cloned earlier click "Go".
+
+2.  **_Deployment_**
+
+    1.  Clone This Github Repository: git clone EnricoDungca/BHMS
+
+    2.  Install pyinstall using cmd/terminal: pip install pyinstall
+
+    3.  Deployment Process:
+
+        - Using cmd/terminal go to main directory of the source file
+        - If you're inside the directory type this:
+
+              pyinstaller --noconfirm --clean --onefile --windowed --icon=logo.png --add-data "Back_End\.env.secret;Back_End" --add-data "Front_End\Pic\logo.png;Front_End\Pic" --additional-hooks-dir=. --collect-all mysql.connector --hidden-import mysql.connector.plugins --hidden-import mysql.connector.plugins.mysql_native_password --hidden-import mysql.connector.plugins.caching_sha2_password --hidden-import mysql.connector.plugins.authentication --hidden-import mysql.connector.authentication --collect-all cryptography --hidden-import cryptography BHMS.py
