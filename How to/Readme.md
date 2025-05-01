@@ -105,21 +105,19 @@ import re
 
 # How to Setup and Deploy
 
+### how to setup
+
 1.  **_Setup Database and desktop Application:_**
 
     - Clone Github Repositoty From CMD/Terminal:
 
       1. Open terminal or cmd
-      2. Choose directory where you want to clone repository
-      3. Type This ""
+      2. choose directory where you want to clone the repository and
+      3. Type This: gh repo clone EnricoDungca/BHMSapp
 
     - import ".spl" file to localhost/phpmyadmin:
 
-      1.  Download Xampp
-      2.  Open Xampp and start Apache and MySql
+      1.  Download Xampp.
+      2.  after download Open Xampp and start Apache and MySql
       3.  And go to browser type "http://localhost/phpmyadmin/index.php" or open xamp and click "Admin" on MySql.
-      4.  Look for "Import" and "Choose File" after choosing a file click "Go".
-
-2.  **_Deployment_**
-
-    -
+      4.  After opening look for "Import" and "Choose File" choose the .spl file that you cloned earlier click "Go".
