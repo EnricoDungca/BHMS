@@ -3,6 +3,15 @@ from tkinter import messagebox, font, ttk
 import sys, os
 from dotenv import dotenv_values
 
+def resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller bundle"""
+    try:
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 # Ensure relative import paths work after PyInstaller bundling
 BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
 sys.path.insert(0, os.path.join(BASE_DIR, "BHMS"))
@@ -53,11 +62,19 @@ class LoginUI(tk.Tk):
         header_frame = tk.Frame(main_frame, bg="#f0f2f5")
         header_frame.pack(pady=(0, 50))
         
-        # Load and display the logo image
-        self.logo_image = tk.PhotoImage(file=r"Front_End\Pic\logo.png")
-        logo_label = tk.Label(header_frame, image=self.logo_image, bg="#f0f2f5")
-        logo_label.image = self.logo_image  # Prevent garbage collection
-        logo_label.grid(row=0, column=0, padx=(0, 15))
+        # Load and display the logo image - FIX PATH HANDLING
+        logo_path = resource_path(os.path.join("Front_End", "Pic", "logo.png"))
+        try:
+            self.logo_image = tk.PhotoImage(file=logo_path)
+            logo_label = tk.Label(header_frame, image=self.logo_image, bg="#f0f2f5")
+            logo_label.image = self.logo_image  # Prevent garbage collection
+            logo_label.grid(row=0, column=0, padx=(0, 15))
+        except Exception as e:
+            print(f"Error loading logo image from {logo_path}: {str(e)}")
+            # Create a placeholder if image fails to load
+            placeholder = tk.Label(header_frame, text="LOGO", font=self.title_font, bg="#f0f2f5", 
+                                  width=10, height=5)
+            placeholder.grid(row=0, column=0, padx=(0, 15))
         
         # Title label changes based on mode
         if self.mode == "admin":

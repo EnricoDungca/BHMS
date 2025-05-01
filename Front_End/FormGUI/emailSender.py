@@ -19,7 +19,7 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 # Load .env.secret
-env_path = resource_path("config\.env.secret")
+env_path = resource_path("Back_End\.env.secret")
 if not os.path.exists(env_path):
     messagebox.showerror("Error", f".env.secret file not found at: {env_path}")
 

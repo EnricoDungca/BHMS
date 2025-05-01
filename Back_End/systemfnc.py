@@ -18,7 +18,7 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 # Load .env.secret
-env_path = resource_path("config\.env.secret")
+env_path = resource_path("Back_End\.env.secret")
 if not os.path.exists(env_path):
     messagebox.showerror("Error", f".env.secret file not found at: {env_path}")
 
@@ -112,15 +112,54 @@ class database_con:
     
     def check_connection(self):
         try:
-            self.mydb = mysql.connector.connect(
-                host=self.host,
-                user=self.user,
-                password=self.passw,
-                database=self.DBName
-            )
-            return self.mydb
+            # If we're in a PyInstaller bundle, make special accommodations
+            if getattr(sys, 'frozen', False):
+                bundle_dir = sys._MEIPASS
+                os.environ['PATH'] = os.path.join(bundle_dir) + os.pathsep + os.environ['PATH']
+                
+                # Try connecting to XAMPP MySQL without specifying auth_plugin
+                try:
+                    self.mydb = mysql.connector.connect(
+                        host=self.host,
+                        user=self.user,
+                        password=self.passw,
+                        database=self.DBName,
+                        use_pure=True  # Force using pure Python implementation
+                    )
+                    return self.mydb
+                except mysql.connector.Error as first_error:
+                    # If the first attempt fails, try with explicit auth_plugin
+                    try:
+                        self.mydb = mysql.connector.connect(
+                            host=self.host,
+                            user=self.user,
+                            password=self.passw,
+                            database=self.DBName,
+                            auth_plugin='mysql_native_password'
+                        )
+                        return self.mydb
+                    except mysql.connector.Error:
+                        # If that also fails, try caching_sha2_password
+                        self.mydb = mysql.connector.connect(
+                            host=self.host,
+                            user=self.user,
+                            password=self.passw,
+                            database=self.DBName,
+                            auth_plugin='caching_sha2_password'
+                        )
+                        return self.mydb
+            else:
+                # Standard connection for development environment
+                self.mydb = mysql.connector.connect(
+                    host=self.host,
+                    user=self.user,
+                    password=self.passw,
+                    database=self.DBName
+                )
+                return self.mydb
         except mysql.connector.Error as e:
             print("Error: " + str(e))
+            messagebox.showerror("Database Connection Error", f"Could not connect to the database: {str(e)}")
             return None
         
     def close_connection(self):
