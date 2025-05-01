@@ -3,11 +3,11 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import ttk, messagebox
 from tkinter.font import Font
+import sys, os
 
-# ─── project imports ──────────────────────────────────────────
-PROJECT_ROOT = Path(r"\BHMS").resolve()
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+# Ensure relative import paths work after PyInstaller bundling
+BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
+sys.path.insert(0, os.path.join(BASE_DIR, "BHMS"))
 
 from Back_End import systemfnc as fnc  # type: ignore
 from Front_End.PagesGUI import Billing  # type: ignore

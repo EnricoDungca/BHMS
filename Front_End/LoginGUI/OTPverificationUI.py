@@ -2,10 +2,11 @@ import tkinter as tk
 from tkinter import ttk, font
 import time
 from threading import Thread
-import sys
+import sys, os
 
-# import local modules
-sys.path.insert(0,'\\BHMS')
+# Ensure relative import paths work after PyInstaller bundling
+BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
+sys.path.insert(0, os.path.join(BASE_DIR, "BHMS"))
 from Back_End.systemfnc import email
 from Front_End.PagesGUI import Dashboard
 from Front_End.LoginGUI import Login

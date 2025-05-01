@@ -9,9 +9,21 @@ import os
 import sys
 from dotenv import dotenv_values
 
-config = {
-    **dotenv_values(r"Back_End\.env.secret")
-}
+def resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller bundle"""
+    try:
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+# Load .env.secret
+env_path = resource_path("config/.env.secret")
+if not os.path.exists(env_path):
+    messagebox.showerror("Error", f".env.secret file not found at: {env_path}")
+
+config = dotenv_values(env_path)
 
 # Load local module
 sys.path.insert(0, '\\BHMS')

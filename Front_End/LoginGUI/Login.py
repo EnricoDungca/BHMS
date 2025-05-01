@@ -1,10 +1,11 @@
 import tkinter as tk
 from tkinter import messagebox, font, ttk
-import sys
+import sys, os
 from dotenv import dotenv_values
 
-# Import local modules (update paths as needed)
-sys.path.insert(0,'\\BHMS')
+# Ensure relative import paths work after PyInstaller bundling
+BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
+sys.path.insert(0, os.path.join(BASE_DIR, "BHMS"))
 from Back_End.systemfnc import authentication
 from Front_End.LoginGUI import OTPverificationUI
 

@@ -1,11 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
 from datetime import date
-import sys
+import sys, os
 from tkinter import messagebox
 
-sys.path.insert(0, '\\BHMS')
-# load local module
+# Ensure relative import paths work after PyInstaller bundling
+BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
+sys.path.insert(0, os.path.join(BASE_DIR, "BHMS"))
 from Back_End import systemfnc as fnc
 from Front_End.LoginGUI import Login
 from Front_End.PagesGUI import patientRegistration
