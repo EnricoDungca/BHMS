@@ -6,10 +6,21 @@ import random as rd
 from dotenv import load_dotenv, dotenv_values
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import sys, os
 
+def resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller bundle"""
+    try:
+        base_path = sys._MEIPASS  # PyInstaller sets this
+    except AttributeError:
+        base_path = os.path.abspath(".")
 
+    return os.path.join(base_path, relative_path)
+
+# Load .env.secret from the bundled or source location
+env_path = resource_path("Back_End/.env.secret")  # This matches your PyInstaller --add-data target
 config = {
-    **dotenv_values(r"Back_End\.env.secret")
+    **dotenv_values(env_path)
 }
 
 class email():
