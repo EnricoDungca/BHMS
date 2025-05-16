@@ -2,13 +2,13 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from tkinter.font import Font
 import sys, os
+import re  # Regex module
 
 # Ensure relative import paths work after PyInstaller bundling
 BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
 sys.path.insert(0, os.path.join(BASE_DIR, "BHMS"))
 from Back_End import systemfnc as fnc
 from Front_End.PagesGUI import Inventory
-
 
 class InventoryForm:
     def __init__(self, root, staff_id):
@@ -19,21 +19,24 @@ class InventoryForm:
         self.staff_id = staff_id
 
         self.colors = {
-            "bg": "#ffffff",
+            "bg": "#f0f2f5",
             "accent": "#000000",
             "text": "#333333",
-            "light_bg": "#f5f5f5",
+            "light_bg": "#ffffff",
             "danger": "#e74c3c",
-            "section_bg": "#f9f9f9"
+            "section_bg": "#ffffff",
+            "required": "#e74c3c"
         }
 
+        self.required_fields = ["Item Name", "Category", "Quantity", "Unit Price"]
+        self.optional_fields = ["Total Price"]
+
         self.configure_styles()
-        self.form_vars: dict[str, tk.StringVar] = {}
-        self.qty_var = self.price_var = self.total_var = None    # will hold StringVars
-        self.total_entry = None                                   # will hold the Entry widget
+        self.form_vars = {}
+        self.qty_var = self.price_var = self.total_var = None
+        self.total_entry = None
         self.create_widgets()
 
-    # ──────────────────────────  STYLES ──────────────────────────
     def configure_styles(self):
         self.root.configure(bg=self.colors["bg"])
         style = ttk.Style()
@@ -45,16 +48,13 @@ class InventoryForm:
                         troughcolor=self.colors["light_bg"],
                         arrowcolor=self.colors["text"])
 
-    # ──────────────────────────  WIDGETS ──────────────────────────
     def create_widgets(self):
-        # header
-        header = tk.Frame(self.root, bg=self.colors["accent"], height=70)
+        header = tk.Frame(self.root, bg=self.colors["accent"], height=90)
         header.pack(fill="x")
         tk.Label(header, text="Inventory Form",
-                 font=Font(family="Arial", size=18, weight="bold"),
-                 bg=self.colors["accent"], fg="white").pack(pady=15)
+                 font=Font(family="Arial", size=22, weight="bold"),
+                 bg=self.colors["accent"], fg="white").pack(pady=25)
 
-        # scrollable body
         container = tk.Frame(self.root, bg=self.colors["bg"])
         container.pack(fill="both", expand=True, padx=20, pady=20)
 
@@ -75,34 +75,35 @@ class InventoryForm:
         self.scrollable_frame = scrollable
         self.create_inventory_section()
 
-        # footer buttons
         button_bar = tk.Frame(self.root, bg=self.colors["bg"], pady=20)
         button_bar.pack(side="bottom", fill="x")
 
-        tk.Button(button_bar, text="Add Item", font=("Arial", 12),
+        tk.Button(button_bar, text="➕ Add Item", font=("Arial", 14),
                   command=self.submit_data, bg=self.colors["accent"],
-                  fg="white", padx=20, pady=8, bd=0).pack(side="right", padx=20)
+                  fg="white", padx=20, pady=10, bd=0).pack(side="right", padx=20)
 
-        tk.Button(button_bar, text="Exit", font=("Arial", 12),
+        tk.Button(button_bar, text="❌ Exit", font=("Arial", 14),
                   command=self.back, bg=self.colors["danger"],
-                  fg="white", padx=20, pady=8, bd=0).pack(side="right")
+                  fg="white", padx=20, pady=10, bd=0).pack(side="right")
 
-    # ──────────────────  INVENTORY FORM SECTION ──────────────────
     def create_inventory_section(self):
-        fields = ["Item Name", "Category", "Quantity", "Unit Price", "Total Price"]
+        fields = self.required_fields + self.optional_fields
 
         section = tk.LabelFrame(self.scrollable_frame, text="Inventory Information",
-                                bg=self.colors["bg"], fg=self.colors["text"],
-                                font=("Arial", 14, "bold"), bd=2, relief="groove",
+                                bg=self.colors["section_bg"], fg=self.colors["text"],
+                                font=("Arial", 16, "bold"), bd=2, relief="groove",
                                 padx=10, pady=10)
         section.pack(fill="x", padx=30, pady=15)
 
         for field in fields:
-            row = tk.Frame(section, bg=self.colors["bg"])
-            row.pack(fill="x", pady=8)
+            row = tk.Frame(section, bg=self.colors["section_bg"])
+            row.pack(fill="x", pady=10)
 
-            tk.Label(row, text=f"{field}:", font=("Arial", 12),
-                     bg=self.colors["bg"], fg=self.colors["text"], anchor="w"
+            label_fg = self.colors["required"] if field in self.required_fields else self.colors["text"]
+            suffix = " *" if field in self.required_fields else " (optional)"
+
+            tk.Label(row, text=f"{field}:{suffix}", font=("Arial", 14),
+                     bg=self.colors["section_bg"], fg=label_fg, anchor="w"
                      ).pack(fill="x")
 
             var = tk.StringVar()
@@ -110,16 +111,15 @@ class InventoryForm:
 
             entry_state = "normal"
             if field == "Total Price":
-                entry_state = "disabled"    # user can’t type here
+                entry_state = "disabled"
 
-            e = tk.Entry(row, textvariable=var, font=("Arial", 11),
+            e = tk.Entry(row, textvariable=var, font=("Arial", 13),
                          bd=0, highlightthickness=1,
                          highlightbackground="#e0e0e0",
                          highlightcolor=self.colors["accent"],
                          state=entry_state)
-            e.pack(fill="x", ipady=8)
+            e.pack(fill="x", ipady=10)
 
-            # keep references for live calculation
             if field == "Quantity":
                 self.qty_var = var
             elif field == "Unit Price":
@@ -128,13 +128,10 @@ class InventoryForm:
                 self.total_var = var
                 self.total_entry = e
 
-        # call self.update_total whenever Quantity or Unit Price changes
         self.qty_var.trace_add("write", self.update_total)
         self.price_var.trace_add("write", self.update_total)
 
-    # ────────────────────  LIVE TOTAL UPDATE ────────────────────
     def update_total(self, *args):
-        """Compute quantity × unit price and display in Total Price."""
         def safe_float(txt):
             try:
                 return float(txt)
@@ -145,20 +142,40 @@ class InventoryForm:
         price = safe_float(self.price_var.get())
         total = qty * price
 
-        # temporarily enable, write, then disable again
         self.total_entry.config(state="normal")
         self.total_var.set(total)
         self.total_entry.config(state="disabled")
 
-    # ─────────────────────  BUTTON HANDLERS ─────────────────────
+    def validate_inputs(self, data):
+        errors = []
+
+        if not re.fullmatch(r"[A-Za-z0-9\s\-]+", data["Item Name"]):
+            errors.append("Item Name should only contain letters, numbers, spaces, or hyphens.")
+
+        if not re.fullmatch(r"[A-Za-z0-9\s\-]+", data["Category"]):
+            errors.append("Category should only contain letters, numbers, spaces, or hyphens.")
+
+        if not re.fullmatch(r"\d+", data["Quantity"]):
+            errors.append("Quantity should be a whole number.")
+
+        if not re.fullmatch(r"\d+(\.\d{1,2})?", data["Unit Price"]):
+            errors.append("Unit Price should be a valid number (e.g., 10 or 10.50).")
+
+        return errors
+
     def submit_data(self):
         data = {f: v.get() for f, v in self.form_vars.items()}
-        empty = [f for f, v in data.items() if not v]
+        empty = [f for f in self.required_fields if not data[f]]
 
         if empty:
             messagebox.showwarning("Missing Information",
-                                   "Please fill in the following fields:\n• "
-                                   + "\n• ".join(empty))
+                                   "Please fill in the following required fields:\n• " +
+                                   "\n• ".join(empty))
+            return
+
+        errors = self.validate_inputs(data)
+        if errors:
+            messagebox.showerror("Invalid Input", "\n".join(errors))
             return
 
         fnc.database_con().insert(
@@ -171,20 +188,16 @@ class InventoryForm:
     def clear_form(self):
         for var in self.form_vars.values():
             var.set("")
-        # ensure total resets to 0.00
         self.update_total()
 
     def back(self):
         self.root.destroy()
         Inventory.main(self.staff_id)
 
-
-# ────────────────────────────  MAIN ────────────────────────────
 def main(id):
     root = tk.Tk()
     InventoryForm(root, id)
     root.mainloop()
 
-
 if __name__ == "__main__":
-    main()
+    main(1)

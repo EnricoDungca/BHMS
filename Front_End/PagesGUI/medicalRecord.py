@@ -6,6 +6,7 @@ from datetime import date
 # Ensure relative import paths work after PyInstaller bundling
 BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
 sys.path.insert(0, os.path.join(BASE_DIR, "BHMS"))
+
 from Back_End import systemfnc as fnc
 from Front_End.LoginGUI import Login
 from Front_End.PagesGUI import Dashboard
@@ -18,15 +19,15 @@ from Front_End.FormEditUI import EdittForm
 from Front_End.ProfileGUI import medicalProfile
 
 class MedicalRecordManagementApp:
-    def __init__(self, root, id):
-        self.root = root
-        self.root.title("Birthing Home - Check Up")
+    def __init__(self, root, user_id):
+        self.root    = root
+        self.user_id = user_id
+
+        self.root.title("Birthing Home — Check Up Management")
         self.root.geometry("1200x700")
         self.root.attributes('-fullscreen', True)
         self.root.bind('<Escape>', self.exit_fullscreen)
-        
-        self.id = id
-        
+
         self.init_fonts()
         self.create_topbar()
         self.create_content()
@@ -35,54 +36,76 @@ class MedicalRecordManagementApp:
         self.root.attributes('-fullscreen', False)
 
     def init_fonts(self):
-        self.title_font  = font.Font(family="Arial", size=18, weight="bold")
-        self.header_font = font.Font(family="Arial", size=12, weight="bold")
-        self.nav_font    = font.Font(family="Arial", size=11)
-        self.button_font = font.Font(family="Arial", size=10)
-        self.table_font  = font.Font(family="Arial", size=10)
-        self.small_font  = font.Font(family="Arial", size=9)
+        # Match Inventory GUI styling
+        self.title_font  = font.Font(family="Arial", size=22, weight="bold")
+        self.header_font = font.Font(family="Arial", size=14, weight="bold")
+        self.nav_font    = font.Font(family="Arial", size=12)
+        self.button_font = font.Font(family="Arial", size=12)
+        self.table_font  = font.Font(family="Arial", weight="bold", size=12)
+        self.small_font  = font.Font(family="Arial", size=11)
 
     def create_topbar(self):
-        topbar = tk.Frame(self.root, bg="#111111", height=60)
+        topbar = tk.Frame(self.root, bg="#111111", height=70)
         topbar.pack(fill="x")
         topbar.grid_columnconfigure(0, weight=1)
         topbar.grid_columnconfigure(1, weight=3)
         topbar.grid_columnconfigure(2, weight=1)
 
-        logo = tk.Label(topbar, text="Birthing Home", font=("Helvetica", 14, "bold"),
-                        bg="#111111", fg="white")
-        logo.grid(row=0, column=0, sticky="w", padx=20, pady=15)
+        logo = tk.Label(
+            topbar,
+            text="Birthing Home",
+            font=("Helvetica", 16, "bold"),
+            bg="#111111",
+            fg="white"
+        )
+        logo.grid(row=0, column=0, sticky="w", padx=20, pady=20)
 
         nav_frame = tk.Frame(topbar, bg="#111111")
         nav_frame.grid(row=0, column=1)
         nav_items = ["Dashboard", "Patients", "Appointments", "Records", "Billing", "Inventory"]
         for item in nav_items:
-            btn = tk.Button(nav_frame, text=item, font=("Helvetica", 10),
-                            bg="#111111", fg="white", activebackground="#222222",
-                            activeforeground="white", border=0, cursor="hand2",
-                            command=lambda i=item: self.nav_click(i))
-            btn.pack(side="left", padx=12)
+            btn = tk.Button(
+                nav_frame,
+                text=item,
+                font=self.nav_font,
+                bg="#111111",
+                fg="white",
+                activebackground="#222222",
+                activeforeground="white",
+                border=0,
+                cursor="hand2",
+                command=lambda i=item: self.nav_click(i)
+            )
+            btn.pack(side="left", padx=16)
 
-        logout_btn = tk.Button(topbar, text="Log Out", font=("Helvetica", 10),
-                               bg="#111111", fg="white", activebackground="#222222",
-                               activeforeground="white", border=0, cursor="hand2",
-                               command=self.logout)
+        logout_btn = tk.Button(
+            topbar,
+            text="Log Out",
+            font=self.nav_font,
+            bg="#111111",
+            fg="white",
+            activebackground="#222222",
+            activeforeground="white",
+            border=0,
+            cursor="hand2",
+            command=self.logout
+        )
         logout_btn.grid(row=0, column=2, sticky="e", padx=20)
 
     def nav_click(self, item):
         self.root.destroy()
         if item == "Dashboard":
-            Dashboard.main(self.id)
+            Dashboard.main(self.user_id)
         elif item == "Patients":
-            patientRegistration.main(self.id)
+            patientRegistration.main(self.user_id)
         elif item == "Appointments":
-            Appointment.main(self.id)
+            Appointment.main(self.user_id)
         elif item == "Records":
-            main(self.id)
+            main(self.user_id)
         elif item == "Billing":
-            Billing.main(self.id)
+            Billing.main(self.user_id)
         elif item == "Inventory":
-            Inventory.main(self.id)
+            Inventory.main(self.user_id)
 
     def logout(self):
         self.root.destroy()
@@ -95,44 +118,70 @@ class MedicalRecordManagementApp:
         self.create_header(self.content_frame)
         self.create_tab_bar(self.content_frame)
 
-        # Create separate frames for each tab.
+        # two sub‑frames: one for Check‑Up, one for NSD
         self.medical_frame = tk.Frame(self.content_frame, bg="white")
         self.nsd_frame     = tk.Frame(self.content_frame, bg="white")
 
-        # Build Check Up (formerly Medical Records) tab.
-        self.create_search(self.medical_frame, "Search check ups...", search_for="checkup")
-        self.create_table(self.medical_frame, title="Check Up Directory",
-                          sub_title="Manage and view all check ups", table_type="checkup")
+        # Populate Check‑Up tab
+        self.create_search(self.medical_frame, "Search check ups…", search_for="checkup")
+        self.create_table(
+            self.medical_frame,
+            title="📋 Check Up Directory",
+            sub_title="Manage and view all check ups",
+            table_type="checkup"
+        )
 
-        # Build NSD Records tab.
-        self.create_search(self.nsd_frame, "Search NSD records...", search_for="nsd")
+        # Populate NSD tab
+        self.create_search(self.nsd_frame, "Search NSD records…", search_for="nsd")
         self.create_nsd_table(self.nsd_frame)
 
-        # Show default tab.
+        # Show default
         self.show_medical_records()
 
     def create_header(self, parent):
-        header_frame = tk.Frame(parent, bg="white")
-        header_frame.pack(fill=tk.X)
-        tk.Label(header_frame, text="Check Up Management", font=self.title_font, bg="white").pack(side=tk.LEFT)
-        tk.Button(header_frame, text="+ Add New Record", font=self.button_font,
-                  bg="#1a1a1a", fg="white", padx=10, pady=5, relief=tk.FLAT,
-                  command=self.add_medical_record).pack(side=tk.RIGHT)
+        header = tk.Frame(parent, bg="white")
+        header.pack(fill=tk.X)
+        tk.Label(
+            header,
+            text="🩺 Medical Records",
+            font=self.title_font,
+            bg="white"
+        ).pack(side=tk.LEFT)
+        tk.Button(
+            header,
+            text="+ Add New Record",
+            font=self.button_font,
+            bg="#1a1a1a",
+            fg="white",
+            padx=10,
+            pady=6,
+            relief=tk.FLAT,
+            command=self.add_medical_record
+        ).pack(side=tk.RIGHT)
 
     def add_medical_record(self):
         self.root.destroy()
-        medicalRecordForm.main(self.id)
+        medicalRecordForm.main(self.user_id)
 
     def create_tab_bar(self, parent):
         self.active_tab = tk.StringVar(value="medical")
         tab_frame = tk.Frame(parent, bg="white")
         tab_frame.pack(fill=tk.X, pady=(10, 0))
+
         self.tab_buttons = {}
-        for tab in ["medical", "nsd"]:
-            text = "Check Up" if tab == "medical" else "NSD Records"
-            btn = tk.Button(tab_frame, text=text, font=self.header_font,
-                            bg="#f0f0f0", fg="black", relief=tk.FLAT, padx=10, pady=5,
-                            command=lambda t=tab: self.switch_tab(t))
+        for tab in ("medical", "nsd"):
+            label = "Check Up" if tab == "medical" else "NSD Records"
+            btn = tk.Button(
+                tab_frame,
+                text=label,
+                font=self.header_font,
+                bg="#f0f0f0",
+                fg="black",
+                relief=tk.FLAT,
+                padx=10,
+                pady=5,
+                command=lambda t=tab: self.switch_tab(t)
+            )
             btn.pack(side=tk.LEFT, padx=5)
             self.tab_buttons[tab] = btn
 
@@ -142,8 +191,12 @@ class MedicalRecordManagementApp:
             self.show_medical_records()
         else:
             self.show_nsd_records()
-        for t, btn in self.tab_buttons.items():
-            btn.config(bg="#1a1a1a" if t==tab else "#f0f0f0", fg="white" if t==tab else "black")
+
+        for key, btn in self.tab_buttons.items():
+            if key == tab:
+                btn.config(bg="#111111", fg="white")
+            else:
+                btn.config(bg="#f0f0f0", fg="black")
 
     def show_medical_records(self):
         self.nsd_frame.pack_forget()
@@ -153,218 +206,319 @@ class MedicalRecordManagementApp:
         self.medical_frame.pack_forget()
         self.nsd_frame.pack(fill=tk.BOTH, expand=True)
 
-    def create_search(self, parent, placeholder_text, search_for):
-        # Generic search bar creation for both tabs.
-        search_frame = tk.Frame(parent, bg="white", pady=20)
-        search_frame.pack(fill=tk.X)
-        tk.Label(search_frame, text="Search: ", bg="white").pack(side=tk.LEFT)
-        search_entry = tk.Entry(search_frame, font=self.table_font, width=50,
-                                relief=tk.SOLID, bd=1)
-        search_entry.insert(0, placeholder_text)
-        search_entry.pack(side=tk.LEFT, padx=5)
-        search_entry.bind("<FocusIn>", lambda e, entry=search_entry, text=placeholder_text: self.clear_placeholder(e, entry, text))
-        search_entry.bind("<FocusOut>", lambda e, entry=search_entry, text=placeholder_text: self.restore_placeholder(e, entry, text))
-        # Bind key-release to refresh the table based on search.
+    def create_search(self, parent, placeholder, search_for):
+        search = tk.Frame(parent, bg="white", pady=20)
+        search.pack(fill=tk.X)
+        tk.Label(
+            search,
+            text="🔍 Search:",
+            font=self.small_font,
+            bg="white"
+        ).pack(side=tk.LEFT)
+
+        entry = tk.Entry(
+            search,
+            font=self.table_font,
+            width=50,
+            bd=1,
+            relief=tk.SOLID
+        )
+        entry.insert(0, placeholder)
+        entry.pack(side=tk.LEFT, padx=10)
+
+        # placeholder logic
+        entry.bind(
+            "<FocusIn>",
+            lambda e, ent=entry, ph=placeholder: ent.delete(0, tk.END)
+            if ent.get() == ph else None
+        )
+        entry.bind(
+            "<FocusOut>",
+            lambda e, ent=entry, ph=placeholder: ent.insert(0, ph)
+            if ent.get().strip() == "" else None
+        )
+
+        # key release → refresh
         if search_for == "checkup":
-            search_entry.bind("<KeyRelease>", lambda e: self.refresh_checkup_table())
-            self.search_entry = search_entry  # for check ups
-        elif search_for == "nsd":
-            search_entry.bind("<KeyRelease>", lambda e: self.refresh_nsd_table())
-            self.nsd_search_entry = search_entry  # for NSD
-
-    def clear_placeholder(self, event, entry, placeholder_text):
-        if entry.get() == placeholder_text:
-            entry.delete(0, tk.END)
-
-    def restore_placeholder(self, event, entry, placeholder_text):
-        if entry.get() == "":
-            entry.insert(0, placeholder_text)
+            entry.bind("<KeyRelease>", lambda e: self.refresh_checkup_table())
+            self.search_entry = entry
+        else:
+            entry.bind("<KeyRelease>", lambda e: self.refresh_nsd_table())
+            self.nsd_search_entry = entry
 
     def create_table(self, parent, title, sub_title, table_type):
-        # Generic table creation for Check Up records.
-        dir_frame = tk.Frame(parent, bg="white", bd=1, relief=tk.SOLID, padx=20, pady=20)
-        dir_frame.pack(fill=tk.BOTH, expand=True)
-        tk.Label(dir_frame, text=title, font=self.header_font, bg="white").pack(anchor=tk.W)
-        tk.Label(dir_frame, text=sub_title, font=self.small_font, fg="#666666", bg="white").pack(anchor=tk.W, pady=(0, 15))
-        table_frame = tk.Frame(dir_frame, bg="white")
-        table_frame.pack(fill=tk.BOTH, expand=True)
+        frame = tk.Frame(parent, bg="white", bd=1, relief=tk.SOLID, padx=20, pady=20)
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        tk.Label(frame, text=title, font=self.header_font, bg="white").pack(anchor=tk.W)
+        tk.Label(
+            frame,
+            text=sub_title,
+            font=self.small_font,
+            fg="#666666",
+            bg="white"
+        ).pack(anchor=tk.W, pady=(0, 15))
+
+        tbl_wrap = tk.Frame(frame, bg="white")
+        tbl_wrap.pack(fill=tk.BOTH, expand=True)
 
         headers = ["Record ID", "Patient Name", "Condition", "Date", "Doctor", "Actions"]
-        col_widths = [150, 350, 350, 350, 350, 150]
+        widths  = [100, 250, 250, 250, 250, 150]
 
-        header_row = tk.Frame(table_frame, bg="#f5f5f5")
-        header_row.pack(fill=tk.X)
-        for i, header in enumerate(headers):
-            tk.Label(header_row, text=header, font=self.table_font,
-                     bg="#f5f5f5", width=col_widths[i] // 10, anchor="w").pack(side=tk.LEFT)
+        hdr = tk.Frame(tbl_wrap, bg="#f5f5f5")
+        hdr.pack(fill=tk.X)
+        for i, text in enumerate(headers):
+            tk.Label(
+                hdr,
+                text=text,
+                font=self.table_font,
+                bg="#f5f5f5",
+                width=widths[i] // 10,
+                anchor="w"
+            ).pack(side=tk.LEFT)
 
-        # Create scrollable container.
-        body_frame = tk.Frame(table_frame, bg="white")
-        body_frame.pack(fill=tk.BOTH, expand=True)
-        canvas = tk.Canvas(body_frame, bg="white", highlightthickness=0)
-        scrollbar = ttk.Scrollbar(body_frame, orient="vertical", command=canvas.yview)
-        scrollable_frame = tk.Frame(canvas, bg="white")
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        body = tk.Frame(tbl_wrap, bg="white")
+        body.pack(fill=tk.BOTH, expand=True)
+
+        canvas    = tk.Canvas(body, bg="white", highlightthickness=0)
+        scrollbar = ttk.Scrollbar(body, orient="vertical", command=canvas.yview)
+        self.checkup_records_container = tk.Frame(canvas, bg="white")
+
+        canvas.create_window((0, 0), window=self.checkup_records_container, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
         canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        
-        # Save the container and col_widths for search refresh.
-        if table_type == "checkup":
-            self.checkup_records_container = scrollable_frame
-            self.checkup_col_widths = col_widths
-            self.populate_table(scrollable_frame, col_widths)
-        # (The NSD table uses its own creation method below.)
+        self.checkup_col_widths = widths
 
-    def populate_table(self, parent, col_widths):
-        # Retrieve check up records from "medical_records".
+        self.checkup_records_container.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        self.populate_table(self.checkup_records_container, widths)
+
+    def populate_table(self, parent, col_w):
         records = fnc.database_con().read("checkup", "*")
+        account = fnc.database_con().read("accounts", "*")
         records.sort(reverse=True)
-        for row in records:
-            record = {
-                "ID": row[0],
-                "patient_name": row[3],
-                "condition": row[10],
-                "date": row[1],
-                "provider": f"ID: {row[12]}",
+        for r in records:
+            for a in account:
+                if r[12] == a[0]:
+                    name = a[2]
+            rec = {
+                "ID":           r[0],
+                "patient_name": r[3],
+                "condition":    r[10],
+                "date":         r[1],
+                "provider":     f"{name}"
             }
-            self.create_record_row(parent, record, col_widths)
+            self._add_checkup_row(parent, rec, col_w)
 
-    def create_record_row(self, parent, record, col_widths):
-        row_frame = tk.Frame(parent, bg="white")
-        row_frame.pack(fill=tk.X, pady=3)
-        values = [record["ID"], record["patient_name"], record["condition"], record["date"], record["provider"]]
-        for i, val in enumerate(values):
-            tk.Label(row_frame, text=val, font=self.table_font, bg="white",
-                     width=col_widths[i] // 10, anchor="w").pack(side=tk.LEFT)
-        actions_frame = tk.Frame(row_frame, bg="white")
-        actions_frame.pack(side=tk.LEFT, padx=10)
-        tk.Button(actions_frame, text="View", font=self.small_font,
-                  bg="white", fg="black", bd=1, relief=tk.SOLID, padx=10,
-                  command=lambda: self.view_checkup(record["ID"])).pack(side=tk.LEFT, padx=5)
-        tk.Button(actions_frame, text="Edit", font=self.small_font,
-                  bg="black", fg="white", bd=0, relief=tk.FLAT, width=4,
-                  command=lambda: self.edit_checkup(record["ID"])).pack(side=tk.LEFT)
-    
+    def _add_checkup_row(self, parent, rec, col_w):
+        row = tk.Frame(parent, bg="white")
+        row.pack(fill=tk.X, pady=3)
+
+        for i, field in enumerate(
+            [rec["ID"], rec["patient_name"], rec["condition"], rec["date"], rec["provider"]]
+        ):
+            tk.Label(
+                row,
+                text=field,
+                font=self.table_font,
+                bg="white",
+                width=col_w[i] // 10,
+                anchor="w"
+            ).pack(side=tk.LEFT)
+
+        actions = tk.Frame(row, bg="white")
+        actions.pack(side=tk.LEFT, padx=10)
+        tk.Button(
+            actions,
+            text="View",
+            font=self.small_font,
+            bg="white",
+            fg="black",
+            bd=1,
+            relief=tk.SOLID,
+            command=lambda id=rec["ID"]: self.view_checkup(id)
+        ).pack(side=tk.LEFT, padx=5)
+        tk.Button(
+            actions,
+            text="Edit",
+            font=self.small_font,
+            bg="black",
+            fg="white",
+            bd=0,
+            relief=tk.FLAT,
+            command=lambda id=rec["ID"]: self.edit_checkup(id)
+        ).pack(side=tk.LEFT)
+
     def view_checkup(self, record_id):
         self.root.destroy()
-        medicalProfile.main(record_id, self.id, "checkup")
-    
+        medicalProfile.main(record_id, self.user_id, "checkup")
+
     def edit_checkup(self, record_id):
         self.root.destroy()
-        EdittForm.main(self.id, record_id, "checkup", "medicalRecord")
-        
+        EdittForm.main(self.user_id, record_id, "checkup", "medicalRecord")
 
     def create_nsd_table(self, parent):
-        # Build NSD Records table with similar UI to Check Up.
-        dir_frame = tk.Frame(parent, bg="white", bd=1, relief=tk.SOLID, padx=20, pady=20)
-        dir_frame.pack(fill=tk.BOTH, expand=True)
-        tk.Label(dir_frame, text="NSD Record Directory", font=self.header_font, bg="white").pack(anchor=tk.W)
-        tk.Label(dir_frame, text="Manage and view all NSD records", font=self.small_font,
-                 fg="#666666", bg="white").pack(anchor=tk.W, pady=(0, 15))
-        table_frame = tk.Frame(dir_frame, bg="white")
-        table_frame.pack(fill=tk.BOTH, expand=True)
-        headers = ["NSD ID", "Patient Name", "Delivery Date", "Doctor", "Midwife", "Actions"]
-        col_widths = [150, 350, 350, 350, 350, 150]
-        header_row = tk.Frame(table_frame, bg="#f5f5f5")
-        header_row.pack(fill=tk.X)
-        for i, header in enumerate(headers):
-            tk.Label(header_row, text=header, font=self.table_font,
-                     bg="#f5f5f5", width=col_widths[i] // 10, anchor="w").pack(side=tk.LEFT)
-        body_frame = tk.Frame(table_frame, bg="white")
-        body_frame.pack(fill=tk.BOTH, expand=True)
-        canvas = tk.Canvas(body_frame, bg="white", highlightthickness=0)
-        scrollbar = ttk.Scrollbar(body_frame, orient="vertical", command=canvas.yview)
-        scrollable_frame = tk.Frame(canvas, bg="white")
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        frame = tk.Frame(parent, bg="white", bd=1, relief=tk.SOLID, padx=20, pady=20)
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        tk.Label(frame, text="NSD Record Directory", font=self.header_font, bg="white").pack(anchor=tk.W)
+        tk.Label(
+            frame,
+            text="Manage and view all NSD records",
+            font=self.small_font,
+            fg="#666666",
+            bg="white"
+        ).pack(anchor=tk.W, pady=(0, 15))
+
+        tbl_wrap = tk.Frame(frame, bg="white")
+        tbl_wrap.pack(fill=tk.BOTH, expand=True)
+
+        headers = ["NSD ID", "Patient Name", "Delivery Date", "Time of Birth", "Midwife", "Actions"]
+        widths  = [100, 250, 250, 250, 250, 150]
+
+        hdr = tk.Frame(tbl_wrap, bg="#f5f5f5")
+        hdr.pack(fill=tk.X)
+        for i, text in enumerate(headers):
+            tk.Label(
+                hdr,
+                text=text,
+                font=self.table_font,
+                bg="#f5f5f5",
+                width=widths[i] // 10,
+                anchor="w"
+            ).pack(side=tk.LEFT)
+
+        body = tk.Frame(tbl_wrap, bg="white")
+        body.pack(fill=tk.BOTH, expand=True)
+
+        canvas    = tk.Canvas(body, bg="white", highlightthickness=0)
+        scrollbar = ttk.Scrollbar(body, orient="vertical", command=canvas.yview)
+        self.nsd_records_container = tk.Frame(canvas, bg="white")
+
+        canvas.create_window((0, 0), window=self.nsd_records_container, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
         canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        self.nsd_records_container = scrollable_frame
-        self.nsd_col_widths = col_widths
-        self.populate_nsd_table(scrollable_frame, col_widths)
 
-    def populate_nsd_table(self, parent, col_widths):
+        self.nsd_records_container.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        self.nsd_col_widths = widths
+        self.populate_nsd_table(self.nsd_records_container, widths)
+
+    def populate_nsd_table(self, parent, col_w):
         records = fnc.database_con().read("nsd", "*")
+        account = fnc.database_con().read("accounts", "*")
         records.sort(reverse=True)
-        for row in records:
-            record = {
-                "ID": row[0],
-                "patient_name": row[3],
-                "delivery_date": row[4],
-                "timeofbirth": row[5],
-                "midwife": f"ID: {row[9]}"
+        for r in records:
+            for a in account:
+                if a[0] == r[9]:
+                    name = a[2]
+            rec = {
+                "ID":            r[0],
+                "patient_name":  r[3],
+                "delivery_date": r[4],
+                "time":          r[5],
+                "midwife":       f"{name}"
             }
-            self.create_nsd_record_row(parent, record, col_widths)
+            self._add_nsd_row(parent, rec, col_w)
 
-    def create_nsd_record_row(self, parent, record, col_widths):
-        row_frame = tk.Frame(parent, bg="white")
-        row_frame.pack(fill=tk.X, pady=3)
-        values = [record["ID"], record["patient_name"], record["delivery_date"], record["timeofbirth"], record["midwife"]]
-        for i, val in enumerate(values):
-            tk.Label(row_frame, text=val, font=self.table_font, bg="white",
-                     width=col_widths[i] // 10, anchor="w").pack(side=tk.LEFT)
-        actions_frame = tk.Frame(row_frame, bg="white")
-        actions_frame.pack(side=tk.LEFT, padx=10)
-        tk.Button(actions_frame, text="View", font=self.small_font,
-                  bg="white", fg="black", bd=1, relief=tk.SOLID, padx=10,
-                  command=lambda: self.view_nsd(record["ID"])).pack(side=tk.LEFT, padx=5)
-        tk.Button(actions_frame, text="Edit", font=self.small_font,
-                  bg="black", fg="white", bd=0, relief=tk.FLAT, width=4,
-                  command=lambda: self.edit_nsd(record["ID"])).pack(side=tk.LEFT)
-    
+    def _add_nsd_row(self, parent, rec, col_w):
+        row = tk.Frame(parent, bg="white")
+        row.pack(fill=tk.X, pady=3)
+
+        for i, field in enumerate(
+            [rec["ID"], rec["patient_name"], rec["delivery_date"], rec["time"], rec["midwife"]]
+        ):
+            tk.Label(
+                row,
+                text=field,
+                font=self.table_font,
+                bg="white",
+                width=col_w[i] // 10,
+                anchor="w"
+            ).pack(side=tk.LEFT)
+
+        actions = tk.Frame(row, bg="white")
+        actions.pack(side=tk.LEFT, padx=10)
+        tk.Button(
+            actions,
+            text="View",
+            font=self.small_font,
+            bg="white",
+            fg="black",
+            bd=1,
+            relief=tk.SOLID,
+            command=lambda id=rec["ID"]: self.view_nsd(id)
+        ).pack(side=tk.LEFT, padx=5)
+        tk.Button(
+            actions,
+            text="Edit",
+            font=self.small_font,
+            bg="black",
+            fg="white",
+            bd=0,
+            relief=tk.FLAT,
+            command=lambda id=rec["ID"]: self.edit_nsd(id)
+        ).pack(side=tk.LEFT)
+
     def view_nsd(self, record_id):
         self.root.destroy()
-        medicalProfile.main(record_id, self.id, "nsd")
-    
+        medicalProfile.main(record_id, self.user_id, "nsd")
+
     def edit_nsd(self, record_id):
         self.root.destroy()
-        EdittForm.main(self.id, record_id, "nsd", "medicalRecord")
+        EdittForm.main(self.user_id, record_id, "nsd", "medicalRecord")
 
     def refresh_checkup_table(self):
-        # Retrieve the search query, clear the container, and repopulate with filtered Check Up records.
-        query = self.search_entry.get().lower().strip()
-        for widget in self.checkup_records_container.winfo_children():
-            widget.destroy()
+        q = self.search_entry.get().lower().strip()
+        if q == "search check ups…": 
+            q = ""
+        for w in self.checkup_records_container.winfo_children():
+            w.destroy()
         records = fnc.database_con().read("checkup", "*")
         records.sort(reverse=True)
-        for row in records:
-            record = {
-                "ID": row[0],
-                "patient_name": row[1],
-                "condition": row[2],
-                "date": row[3],
-                "doctor": row[4],
-            }
-            # Check if the query exists in any record field.
-            record_text = " ".join(str(val).lower() for val in record.values())
-            if query in record_text or query in ["", "search check ups..."]:
-                self.create_record_row(self.checkup_records_container, record, self.checkup_col_widths)
+        for r in records:
+            flat = " ".join(str(x).lower() for x in (r[3], r[10], r[1], r[12]))
+            if q in flat:
+                rec = {
+                    "ID":           r[0],
+                    "patient_name": r[3],
+                    "condition":    r[10],
+                    "date":         r[1],
+                    "provider":     f"ID: {r[12]}"
+                }
+                self._add_checkup_row(self.checkup_records_container, rec, self.checkup_col_widths)
 
     def refresh_nsd_table(self):
-        # Retrieve the search query, clear the container, and repopulate with filtered NSD records.
-        query = self.nsd_search_entry.get().lower().strip()
-        for widget in self.nsd_records_container.winfo_children():
-            widget.destroy()
+        q = self.nsd_search_entry.get().lower().strip()
+        if q == "search nsd records…":
+            q = ""
+        for w in self.nsd_records_container.winfo_children():
+            w.destroy()
         records = fnc.database_con().read("nsd", "*")
         records.sort(reverse=True)
-        for row in records:
-            record = {
-                "ID": row[0],
-                "patient_name": row[1],
-                "delivery_date": row[2],
-                "doctor": row[3],
-                "midwife": row[4]
-            }
-            record_text = " ".join(str(val).lower() for val in record.values())
-            if query in record_text or query in ["", "search nsd records..."]:
-                self.create_nsd_record_row(self.nsd_records_container, record, self.nsd_col_widths)
+        for r in records:
+            flat = " ".join(str(x).lower() for x in (r[3], r[4], r[5], r[9]))
+            if q in flat:
+                rec = {
+                    "ID":            r[0],
+                    "patient_name":  r[3],
+                    "delivery_date": r[4],
+                    "time":          r[5],
+                    "midwife":       f"ID: {r[9]}"
+                }
+                self._add_nsd_row(self.nsd_records_container, rec, self.nsd_col_widths)
 
-def main(id=8):
+def main(user_id=8):
     root = tk.Tk()
-    app = MedicalRecordManagementApp(root, id)
+    app  = MedicalRecordManagementApp(root, user_id)
     root.mainloop()
 
 if __name__ == "__main__":

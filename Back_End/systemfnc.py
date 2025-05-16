@@ -1,12 +1,13 @@
 from tkinter import messagebox
 from cryptography.fernet import Fernet
+from tkinter import filedialog
 import mysql.connector
 import smtplib
 import random as rd
 from dotenv import dotenv_values
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import sys, os
+import sys, os, datetime, subprocess
 
 def resource_path(relative_path):
     """Get absolute path to resource, works for dev and for PyInstaller bundle"""
@@ -23,7 +24,7 @@ if not os.path.exists(env_path):
     messagebox.showerror("Error", f".env.secret file not found at: {env_path}")
 
 config = dotenv_values(env_path)
-
+  
 class email:
     def __init__(self, email, validation):
         self.email = email
@@ -43,7 +44,7 @@ class email:
                 server.quit()
                 return self.code
             except Exception as e:
-                messagebox.showerror("Error", f"Error in sending OTP: {e}")
+                messagebox.showerror("Error", f"Error in sending OTP: {e}. Please Check your internet connection")
         else:
             messagebox.showerror("Error", "Invalid email address")
             
@@ -56,10 +57,10 @@ class email:
                 server.sendmail(config["EMAIL"], self.email, message.as_string())
                 server.quit()
             except Exception as e:
-                messagebox.showerror("Error", f"Error in sending email: {e}")
+                messagebox.showerror("Error", f"Error in sending email: {e}. Please Check your internet connection")
         else:
             messagebox.showerror("Error", "Invalid email address")
-
+            
 class authentication:
     def __init__(self, email, password):
         self.email = email
@@ -69,9 +70,11 @@ class authentication:
         try:
             for row in database_con().read("accounts", "*"):
                 if self.email == row[4]:
-                    if self.password == Security().decrypt_str(row[5]):
-                        return row[0], True
-            return False
+                    if row[6] == "Active":
+                        if self.password == Security().decrypt_str(row[5]):
+                            status = row[7] if row[7] == "Active" else "Disabled"
+                            return row[0], status, True
+            return False, False, False
         except Exception as e:
             messagebox.showerror("Error", str(e))
     
@@ -265,3 +268,44 @@ class database_con:
         finally:
             if cursor:
                 cursor.close()
+    
+    def database_backup(self):
+        # Validate config keys
+        required_keys = ["MYSQLDUMP_PATH", "USER", "DATABASE"]
+        for key in required_keys:
+            if key not in config:
+                print(f"Missing configuration for: {key}")
+                return
+
+        # Create backup directory if it doesn't exist
+        backup_dir = "DB_Backup"
+        os.makedirs(backup_dir, exist_ok=True)
+
+        # Generate timestamped backup filename
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_filename = f"backup_{timestamp}.sql"
+        backup_path = os.path.join(backup_dir, backup_filename)
+
+        # Build mysqldump command
+        command = [
+            config["MYSQLDUMP_PATH"],
+            f"-u{config['USER']}",
+            config["DATABASE"]
+        ]
+
+        try:
+            with open(backup_path, "w", encoding="utf-8") as backup_file:
+                subprocess.run(command, stdout=backup_file, stderr=subprocess.PIPE, check=True)
+            messagebox.showinfo("Success", f"Database backup created at: {backup_path}")
+            
+            # Optional: Compress the backup file
+            # import gzip, shutil
+            # with open(backup_path, 'rb') as f_in, gzip.open(backup_path + '.gz', 'wb') as f_out:
+            #     shutil.copyfileobj(f_in, f_out)
+            # os.remove(backup_path)
+            # print(f"[INFO] Backup compressed to: {backup_path}.gz")
+
+        except subprocess.CalledProcessError as e:
+            messagebox.showerror("Error", f"Database backup failed: {e.stderr.decode('utf-8')}")
+        except OSError as e:
+            messagebox.showerror("Error", f"Database backup failed: {e}")

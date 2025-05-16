@@ -24,9 +24,9 @@ class AppointmentManagementApp:
         self.root.geometry("1200x700")
         self.root.attributes('-fullscreen', True)
         self.root.bind('<Escape>', self.exit_fullscreen)
-        
+
         self.id = id
-        
+
         self.init_fonts()
         self.create_topbar()
         self.create_content()
@@ -35,24 +35,24 @@ class AppointmentManagementApp:
         self.root.attributes('-fullscreen', False)
 
     def init_fonts(self):
-        self.title_font = font.Font(family="Arial", size=18, weight="bold")
-        self.header_font = font.Font(family="Arial", size=12, weight="bold")
-        self.nav_font = font.Font(family="Arial", size=11)
-        self.button_font = font.Font(family="Arial", size=10)
-        self.table_font = font.Font(family="Arial", weight="bold", size=10)
-        self.small_font = font.Font(family="Arial", size=9)
+        self.title_font = font.Font(family="Arial", size=22, weight="bold")
+        self.header_font = font.Font(family="Arial", size=14, weight="bold")
+        self.nav_font = font.Font(family="Arial", size=12)
+        self.button_font = font.Font(family="Arial", size=12)
+        self.table_font = font.Font(family="Arial", weight="bold", size=12)
+        self.small_font = font.Font(family="Arial", size=11)
 
     def create_topbar(self):
-        topbar = tk.Frame(self.root, bg="#111111", height=60)
+        topbar = tk.Frame(self.root, bg="#111111", height=70)
         topbar.pack(fill="x")
 
         topbar.grid_columnconfigure(0, weight=1)
         topbar.grid_columnconfigure(1, weight=3)
         topbar.grid_columnconfigure(2, weight=1)
 
-        logo = tk.Label(topbar, text="Birthing Home", font=("Helvetica", 14, "bold"),
+        logo = tk.Label(topbar, text="Birthing Home", font=("Helvetica", 16, "bold"),
                         bg="#111111", fg="white")
-        logo.grid(row=0, column=0, sticky="w", padx=20, pady=15)
+        logo.grid(row=0, column=0, sticky="w", padx=20, pady=20)
 
         nav_frame = tk.Frame(topbar, bg="#111111")
         nav_frame.grid(row=0, column=1)
@@ -62,7 +62,7 @@ class AppointmentManagementApp:
             btn = tk.Button(
                 nav_frame,
                 text=item,
-                font=("Helvetica", 10),
+                font=self.nav_font,
                 bg="#111111",
                 fg="white",
                 activebackground="#222222",
@@ -71,12 +71,12 @@ class AppointmentManagementApp:
                 cursor="hand2",
                 command=lambda i=item: self.nav_click(i)
             )
-            btn.pack(side="left", padx=12)
+            btn.pack(side="left", padx=16)
 
         logout_btn = tk.Button(
             topbar,
             text="Log Out",
-            font=("Helvetica", 10),
+            font=self.nav_font,
             bg="#111111",
             fg="white",
             activebackground="#222222",
@@ -118,10 +118,10 @@ class AppointmentManagementApp:
         header_frame = tk.Frame(parent, bg="white")
         header_frame.pack(fill=tk.X)
 
-        tk.Label(header_frame, text="Appointment Management", font=self.title_font, bg="white").pack(side=tk.LEFT)
+        tk.Label(header_frame, text="🗓️ Appointment Management", font=self.title_font, bg="white").pack(side=tk.LEFT)
 
         tk.Button(header_frame, text="+ Schedule New Appointment", font=self.button_font,
-                  bg="#1a1a1a", fg="white", padx=10, pady=5, relief=tk.FLAT,
+                  bg="#1a1a1a", fg="white", padx=10, pady=6, relief=tk.FLAT,
                   command=self.schedule_appointment).pack(side=tk.RIGHT)
 
     def schedule_appointment(self):
@@ -132,11 +132,11 @@ class AppointmentManagementApp:
         search_frame = tk.Frame(parent, bg="white", pady=20)
         search_frame.pack(fill=tk.X)
 
-        tk.Label(search_frame, text="Search: ", bg="white").pack(side=tk.LEFT)
+        tk.Label(search_frame, text="🔍 Search: ", font=self.small_font, bg="white").pack(side=tk.LEFT)
 
         self.search_entry = tk.Entry(search_frame, font=self.table_font, width=50, relief=tk.SOLID, bd=1)
         self.search_entry.insert(0, "Search appointments...")
-        self.search_entry.pack(side=tk.LEFT, padx=5)
+        self.search_entry.pack(side=tk.LEFT, padx=10)
         self.search_entry.bind("<FocusIn>", self.clear_placeholder)
         self.search_entry.bind("<FocusOut>", self.restore_placeholder)
         self.search_entry.bind("<KeyRelease>", self.perform_search)
@@ -153,7 +153,7 @@ class AppointmentManagementApp:
         dir_frame = tk.Frame(parent, bg="white", bd=1, relief=tk.SOLID, padx=20, pady=20)
         dir_frame.pack(fill=tk.BOTH, expand=True)
 
-        tk.Label(dir_frame, text="Appointment Directory", font=self.header_font, bg="white").pack(anchor=tk.W)
+        tk.Label(dir_frame, text="📋 Appointment Directory", font=self.header_font, bg="white").pack(anchor=tk.W)
         tk.Label(dir_frame, text="Manage and view all scheduled appointments", font=self.small_font,
                  fg="#666666", bg="white").pack(anchor=tk.W, pady=(0, 15))
 
@@ -201,7 +201,7 @@ class AppointmentManagementApp:
 
     def create_appointment_row(self, parent, appointment, col_widths):
         row_frame = tk.Frame(parent, bg="white")
-        row_frame.pack(fill=tk.X, pady=3)
+        row_frame.pack(fill=tk.X, pady=4)
 
         status_color = {
             "Scheduled": "#4CAF50",
@@ -213,8 +213,8 @@ class AppointmentManagementApp:
                   appointment["datetime"], appointment["provider"], 
                   appointment["status"]]
         for i, val in enumerate(values):
-            fg = status_color if i == 5 else "black"
-            tk.Label(row_frame, text=val, font="Arial 10", bg="white", fg=fg,
+            fg = status_color if i == 4 else "black"
+            tk.Label(row_frame, text=val, font=self.table_font, bg="white", fg=fg,
                      width=col_widths[i] // 10, anchor="w").pack(side=tk.LEFT)
 
         actions_frame = tk.Frame(row_frame, bg="white")
@@ -225,14 +225,14 @@ class AppointmentManagementApp:
                   command=lambda: self.viewProfile(appointment["ID"])).pack(side=tk.LEFT, padx=5)
 
         tk.Button(actions_frame, text="Edit", font=self.small_font, bg="black", fg="white",
-                  bd=0, relief=tk.FLAT, width=4,
+                  bd=0, relief=tk.FLAT, width=5,
                   command=lambda: self.edit_appointment(appointment["ID"]))\
 .pack(side=tk.LEFT)
 
     def edit_appointment(self, ID):
         self.root.destroy()
         EdittForm.main(self.id, ID, "appointment", "Appointment")
-    
+
     def perform_search(self, event=None):
         query = self.search_entry.get().lower().strip()
         for widget in self.scrollable_frame.winfo_children():

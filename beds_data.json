@@ -1,11 +1,11 @@
 [
   {
     "bed_id": "Bed 1",
-    "occupant": "Enrico"
+    "occupant": null
   },
   {
     "bed_id": "Bed 2",
-    "occupant": "Hill"
+    "occupant": null
   },
   {
     "bed_id": "Bed 3",

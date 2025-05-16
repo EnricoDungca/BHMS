@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.join(BASE_DIR, "BHMS"))
 from Back_End import systemfnc as fnc
 from Front_End.PagesGUI import Dashboard
 
-# 1. Configure CustomTkinter with light theme
+# 1. Configure CustomTkinter
 ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("blue")
 
@@ -38,12 +38,9 @@ class BedTrackingApp(ctk.CTk):
         self.title("Bed Tracking System")
         self.attributes('-fullscreen', True)
 
-        # Load or initialize data
         self.beds = self._load_data()
-
         self.id = id
         
-        # Build UI
         self._build_navbar()
         self._build_content()
         self._update_tree()
@@ -56,7 +53,6 @@ class BedTrackingApp(ctk.CTk):
                 return [Bed.from_dict(d) for d in data]
             except Exception as e:
                 messagebox.showerror("Load Error", f"Failed to load data: {e}")
-        # if file missing or error, initialize 10 empty beds
         return [Bed(f"Bed {i+1}") for i in range(10)]
 
     def _save_data(self):
@@ -67,60 +63,77 @@ class BedTrackingApp(ctk.CTk):
             messagebox.showerror("Save Error", f"Failed to save data: {e}")
 
     def _build_navbar(self):
-        nav = ctk.CTkFrame(self, height=60, corner_radius=0, fg_color="black")
+        nav = ctk.CTkFrame(self, height=70, corner_radius=0, fg_color="black")
         nav.pack(fill="x")
-        ctk.CTkLabel(nav, text="VMUF Birthing Home Bed Tracker", 
-                     font=ctk.CTkFont(size=24, weight="bold"), 
-                     text_color="white").pack(side="left", padx=20)
-        ctk.CTkButton(nav, text="↺ Refresh", 
-                      command=self._update_tree,
-                      fg_color="transparent", 
-                      text_color="white", 
-                      hover_color="#333").pack(side="right", padx=20)
-        ctk.CTkButton(nav, text="Back ->", 
-                      command=self.back,
-                      fg_color="transparent", 
-                      text_color="white", 
-                      hover_color="#333").pack(side="right", padx=20)
+
+        ctk.CTkLabel(
+            nav,
+            text="VMUF Birthing Home Bed Tracker",
+            font=ctk.CTkFont(size=28, weight="bold"),
+            text_color="white"
+        ).pack(side="left", padx=30)
+
+        ctk.CTkButton(
+            nav, text="↺ Refresh",
+            command=self._update_tree,
+            fg_color="transparent", text_color="white",
+            hover_color="#333",
+            font=ctk.CTkFont(size=18)
+        ).pack(side="right", padx=20)
+
+        ctk.CTkButton(
+            nav, text="Back ->",
+            command=self.back,
+            fg_color="transparent", text_color="white",
+            hover_color="#333",
+            font=ctk.CTkFont(size=18)
+        ).pack(side="right", padx=10)
 
     def back(self):
         self.destroy()
         Dashboard.main(self.id)
 
     def _build_content(self):
-        # Style the Treeview
         style = ttk.Style()
         style.theme_use("clam")
         style.configure("Treeview",
                         background="white",
                         foreground="black",
                         fieldbackground="white",
-                        rowheight=30,
-                        font=("Arial", 12))
+                        rowheight=35,
+                        font=("Arial", 14))
+        style.configure("Treeview.Heading",
+                        font=("Arial", 16, "bold"))
         style.map("Treeview",
                   background=[("selected", "#1f6aa5")],
                   foreground=[("selected", "white")])
 
         frame = ctk.CTkFrame(self, corner_radius=15, fg_color="white")
-        frame.pack(padx=30, pady=20, fill="both", expand=True)
+        frame.pack(padx=40, pady=30, fill="both", expand=True)
 
-        # Table
         self.tree = ttk.Treeview(frame, columns=("ID", "Status"), show="headings")
         self.tree.heading("ID", text="Bed ID")
         self.tree.heading("Status", text="Status")
-        self.tree.column("ID", width=150, anchor="center")
-        self.tree.column("Status", width=300, anchor="center")
-        self.tree.pack(pady=20, padx=20, fill="both", expand=True)
+        self.tree.column("ID", width=180, anchor="center")
+        self.tree.column("Status", width=400, anchor="center")
+        self.tree.pack(pady=25, padx=25, fill="both", expand=True)
 
-        # Buttons
         btn_frame = ctk.CTkFrame(frame, fg_color="transparent")
-        btn_frame.pack(pady=(0, 20))
-        ctk.CTkButton(btn_frame, text="Mark as Occupied", 
-                      width=180, height=40, corner_radius=20,
-                      command=self._mark_occupied).grid(row=0, column=0, padx=10)
-        ctk.CTkButton(btn_frame, text="Mark as Available", 
-                      width=180, height=40, corner_radius=20,
-                      command=self._mark_available).grid(row=0, column=1, padx=10)
+        btn_frame.pack(pady=10)
+
+        ctk.CTkButton(
+            btn_frame, text="Mark as Occupied",
+            width=200, height=50, corner_radius=25,
+            command=self._mark_occupied,
+            font=ctk.CTkFont(size=16)
+        ).grid(row=0, column=0, padx=20)
+
+        ctk.CTkButton(
+            btn_frame, text="Mark as Available",
+            width=200, height=50, corner_radius=25,
+            command=self._mark_available,
+            font=ctk.CTkFont(size=16)
+        ).grid(row=0, column=1, padx=20)
 
     def _update_tree(self):
         for row in self.tree.get_children():
@@ -140,9 +153,11 @@ class BedTrackingApp(ctk.CTk):
         bed = self._get_selected_bed()
         if not bed:
             return
-        name = simpledialog.askstring("Occupant Name",
-                                      f"Enter patient name for {bed.bed_id}:",
-                                      parent=self)
+        name = simpledialog.askstring(
+            "Occupant Name",
+            f"Enter patient name for {bed.bed_id}:",
+            parent=self
+        )
         if name:
             bed.occupant = name
             self._save_data()
@@ -155,10 +170,9 @@ class BedTrackingApp(ctk.CTk):
             self._save_data()
             self._update_tree()
 
-def main(id=8):
+def main(id):
     app = BedTrackingApp(id)
     app.mainloop()
-
 
 if __name__ == "__main__":
     main()

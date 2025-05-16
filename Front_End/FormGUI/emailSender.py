@@ -196,7 +196,7 @@ class CompactEmailSender:
         if self.attachments:
             attachment_info = f" with {len(self.attachments)} attachment(s)"
 
-        messagebox.showinfo("Success", f"Email{attachment_info} sent successfully!")
+        
         self.status_var.set(f"Email{attachment_info} sent")
 
         self.message["From"] = config["EMAIL"]
@@ -212,7 +212,8 @@ class CompactEmailSender:
                 part.add_header("Content-Disposition", f"attachment; filename={os.path.basename(attachment)}")
                 self.message.attach(part)
 
-        fnc.email(to_email, True).send_email(self.message)
+        if fnc.email(to_email, True).send_email(self.message):
+            messagebox.showinfo("Success", f"Email{attachment_info} sent successfully!")
 
     def discard_draft(self):
         if messagebox.askyesno("Discard", "Discard this draft?"):

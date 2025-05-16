@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox, font, ttk
 import sys, os
 from dotenv import dotenv_values
+import re
 
 def resource_path(relative_path):
     """Get absolute path to resource, works for dev and for PyInstaller bundle"""
@@ -89,7 +90,7 @@ class LoginUI(tk.Tk):
         login_frame.pack()
         
         # Username label and entry
-        tk.Label(login_frame, text="Username:", font=self.label_font, bg="#f0f2f5").grid(
+        tk.Label(login_frame, text="Email:", font=self.label_font, bg="#f0f2f5").grid(
             row=0, column=0, sticky=tk.W, pady=10
         )
         self.username_entry = tk.Entry(login_frame, width=30, font=self.entry_font)
@@ -159,36 +160,40 @@ class LoginUI(tk.Tk):
         self.username_entry.focus_set()
 
     def validate_login(self):
-        """
-        Validate the login credentials.
-        For "user" mode, authentication is performed and OTP verification is invoked;
-        for "admin" mode, validation is a placeholder.
-        """
         username = self.username_entry.get().strip()
         password = self.password_entry.get().strip()
-        
-        # Check if either field is empty
+
         if not username or not password:
-            messagebox.showerror("Error", "Please enter username and password")
+            messagebox.showerror("Error", "Please enter both email and password.")
             return
-        
+
+        # Regex validation for username and password
+        email_pattern = r"^[\w\.-]+@[\w\.-]+\.\w{2,}$"
+        password_pattern = r"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$"
+
+        if not re.match(email_pattern, username):
+            messagebox.showerror("Error", "Invalid email format.")
+            return
+
+        if not re.match(password_pattern, password):
+            messagebox.showerror("Error", "Invalid password format. Password must be at least 8 characters long and include uppercase, lowercase, and a digit.")
+            return
+
+        # Continue with your existing authentication logic...
         if self.mode == "admin":
-            # Placeholder for admin validation
             id, valid = authentication(username, password).main(self.mode)
             if valid:
                 self.destroy()
-                OTPverificationUI.main(username, id, valid, self.mode)
+                OTPverificationUI.main(username, id, valid, self.mode, "Active")
             else:
-                messagebox.showerror("Error", "Invalid username or password")
+                messagebox.showerror("Error", "Invalid email or password.")
         else:
-        
-            # Validate credentials in user mode using the authentication module
-            id, valid = authentication(username, password).main(self.mode)
+            id, status, valid = authentication(username, password).main(self.mode)
             if valid:
                 self.destroy()
-                OTPverificationUI.main(username, id, valid, self.mode)
+                OTPverificationUI.main(username, id, valid, self.mode, status)
             else:
-                messagebox.showerror("Error", "Invalid username or password")
+                messagebox.showerror("Error", "Invalid email, password, or account is disabled.")
 
     def switch_mode(self):
         """

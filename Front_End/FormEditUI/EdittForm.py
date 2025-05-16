@@ -124,7 +124,8 @@ class EditForm:
             return
 
         ttk.Label(self.form_frame, text=f"{self.tableName.capitalize()} Records", font=("Helvetica Neue", 18, "bold"), foreground="#2980B9").grid(row=0, column=0, columnspan=2, pady=(10, 20))
-
+        
+        
         for idx, value in enumerate(row):
             field = self.columns[idx]
 
@@ -151,6 +152,14 @@ class EditForm:
 
             elif field == "status":
                 options = ["Pending", "Confirmed", "Completed", "Cancelled"]
+                ent = self._combo(self.form_frame, var, options)
+            
+            elif field == "accountstatus":
+                options = ["Active", "Disabled"]
+                ent = self._combo(self.form_frame, var, options)
+            
+            elif field == "otpStatus":
+                options = ["Active", "Disabled"]
                 ent = self._combo(self.form_frame, var, options)
 
             else:

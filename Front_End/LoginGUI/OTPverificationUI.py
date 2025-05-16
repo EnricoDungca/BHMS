@@ -13,7 +13,7 @@ from Front_End.LoginGUI import Login
 from Front_End.PagesGUI import accountManagement
 
 class OTPVerificationScreen:
-    def __init__(self, root, email, id, verify, mode, digits=6, timeout=60):
+    def __init__(self, root, email, id, verify, mode, status, digits=6, timeout=120):
         self.root = root
         self.root.title("OTP Verification")
         
@@ -32,12 +32,14 @@ class OTPVerificationScreen:
         self.time_remaining = timeout
         self.timer_running = False
         
+        
+        
         # Store email and verification data, etc.
         self.email = email
         self.id = id
         self.verify = verify
         self.mode = mode
-        self.code = self.send_otp()
+        self.status = status
         
         # Create custom fonts
         self.title_font = font.Font(family="Arial", size=24, weight="bold")
@@ -66,22 +68,33 @@ class OTPVerificationScreen:
         self.close_button = ttk.Button(
             self.main_frame, 
             text="×", 
-            command=self.root.destroy,
+            command= lambda: self.back(),
             style='TButton'
         )
         self.close_button.place(x=self.screen_width-50, y=20, width=30, height=30)
         
-        # Create UI elements
-        self.create_ui()
-        
-        # Start the timer
-        self.start_timer()
-        
-        # Store references to entry widgets
-        self.entries = []
-        
-        # Create OTP input fields
-        self.create_otp_inputs()
+        if status == "Disabled":
+            self.redirect()
+        else:
+            # Create UI elements
+            self.create_ui()
+            
+            # Store references to entry widgets
+            self.entries = []
+            
+            # Create OTP input fields
+            self.create_otp_inputs()
+            
+            # Start the timer
+            self.start_timer()
+            
+            # send code
+            self.code = self.send_otp()
+            
+    
+    def back(self):
+        self.root.destroy()
+        Login.main()
     
     def send_otp(self):
         """Send the OTP and return the code"""
@@ -367,10 +380,10 @@ class OTPVerificationScreen:
                 Login.LoginUI() 
         
 
-def main(email, id, verify, mode):
+def main(email, id, verify, mode, otp_status):
     """Main function to initiate the OTP Verification Screen"""
     root = tk.Tk()
-    otp_screen = OTPVerificationScreen(root, email, id, verify, mode)
+    otp_screen = OTPVerificationScreen(root, email, id, verify, mode, otp_status)
     root.mainloop()
 
 

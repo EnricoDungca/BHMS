@@ -3,7 +3,8 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import ttk, messagebox
 from tkinter.font import Font
-import sys, os
+import re
+import os
 
 # Ensure relative import paths work after PyInstaller bundling
 BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
@@ -14,406 +15,348 @@ from Front_End.PagesGUI import Billing  # type: ignore
 
 __all__ = ["BillingForm", "main"]
 
-
 class BillingForm:
-    """Full‑screen window that captures a billing record."""
+    """Full‑screen window that captures a billing record.
 
-    # ──────────────────────── init ────────────────────────
+    * Required fields are marked with an asterisk.
+    (optional) indicates optional fields.
+    """
+
     def __init__(self, root: tk.Tk, staff_id: int) -> None:
         self.root = root
         self.staff_id = staff_id
-
         self._init_window()
         self._load_db()
 
-        self.item_rows: list[tuple[str, int, float, float]] = []
-        self.form_vars: dict[str, tk.StringVar] = {}
-        self.combos: dict[str, ttk.Combobox] = {}
+        self.item_rows = []  # list[tuple[name, qty, unit_price, line_total]]
+        self.form_vars = {}
+        self.combos = {}
 
         self._build_header()
         self._build_body()
         self._build_footer()
 
-    # ───────────────── helpers ─────────────────
-    def _init_window(self) -> None:
+    def _init_window(self):
         self.root.title("Billing Form")
-        self.root.attributes("-fullscreen", True)
+        # Attempt to load icon
+        icon_path = Path(BASE_DIR) / 'resources' / 'app.ico'
+        if icon_path.exists():
+            try:
+                self.root.iconbitmap(icon_path)
+            except Exception:
+                pass
+
+        # Fullscreen
+        self.root.attributes('-fullscreen', True)
+        # Define colors
         self.colors = {
-            "bg": "#ffffff",
-            "accent": "#000000",
-            "text": "#333333",
-            "light_bg": "#f5f5f5",
-            "danger": "#e74c3c",
-            "section_bg": "#f9f9f9",
+            'bg': '#ECF0F1',
+            'accent': '#34495E',
+            'header_bg': '#2C3E50',
+            'danger': '#C0392B',
+            'success': '#27AE60',
+            'text': '#2C3E50',
+            'optional': '#7F8C8D',
+            'required': '#E74C3C'
         }
-        self.root.configure(bg=self.colors["bg"])
+        self.root.configure(bg=self.colors['bg'])
+        # Style
         style = ttk.Style()
-        style.theme_use("clam")
-        style.configure("TFrame", background=self.colors["bg"])
-        style.configure("Section.TFrame", background=self.colors["section_bg"])
-        style.configure(
-            "TScrollbar",
-            background=self.colors["bg"],
-            troughcolor=self.colors["light_bg"],
-            arrowcolor=self.colors["text"],
-        )
+        style.theme_use('clam')
+        style.configure('TFrame', background=self.colors['bg'])
+        style.configure('TLabelFrame', background=self.colors['bg'], foreground=self.colors['text'])
+        style.configure('Treeview', background='white', fieldbackground='white')
 
-    def _load_db(self) -> None:
-        self.patients = fnc.database_con().read("registration", "*") or []
-        self.inventory = fnc.database_con().read("inventory", "*") or []
+    def _load_db(self):
+        self.patients = fnc.database_con().read('registration', '*') or []
+        self.inventory = fnc.database_con().read('inventory', '*') or []
 
-    # ───────────────── GUI build ─────────────────
-    def _build_header(self) -> None:
-        header = tk.Frame(self.root, bg=self.colors["accent"], height=70)
-        header.pack(fill="x")
+    def _build_header(self):
+        header = tk.Frame(self.root, bg="black", height=70)
+        header.pack(fill='x')
         tk.Label(
-            header,
-            text="Billing Form",
-            font=Font(family="Arial", size=18, weight="bold"),
-            bg=self.colors["accent"],
-            fg="white",
+            header, text='Billing Form',
+            font=('Helvetica', 20, 'bold'),
+            bg="black", fg='white'
         ).pack(pady=15)
 
-    def _build_body(self) -> None:
-        container = tk.Frame(self.root, bg=self.colors["bg"])
-        container.pack(fill="both", expand=True, padx=20, pady=20)
+        # Legend
+        legend = tk.Frame(self.root, bg=self.colors['bg'])
+        legend.pack(fill='x')
+        tk.Label(
+            legend, text='* Required fields',
+            font=('Arial', 10), fg=self.colors['required'], bg=self.colors['bg']
+        ).pack(side='left', padx=10)
+        tk.Label(
+            legend, text='(optional)',
+            font=('Arial', 10, 'italic'), fg=self.colors['optional'], bg=self.colors['bg']
+        ).pack(side='left')
 
-        canvas = tk.Canvas(container, bg=self.colors["bg"], highlightthickness=0)
-        vscroll = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
-        body = ttk.Frame(canvas)
+    def _build_body(self):
+        container = tk.Frame(self.root, bg=self.colors['bg'])
+        container.pack(fill='both', expand=True, padx=20, pady=20)
 
-        body.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        cid = canvas.create_window((0, 0), window=body, anchor="nw")
-        canvas.bind("<Configure>", lambda e: canvas.itemconfig(cid, width=e.width))
-        canvas.configure(yscrollcommand=vscroll.set)
+        canvas = tk.Canvas(container, bg=self.colors['bg'], highlightthickness=0)
+        scrollbar = ttk.Scrollbar(container, orient='vertical', command=canvas.yview)
+        self.scroll_frame = ttk.Frame(canvas)
 
-        canvas.pack(side="left", fill="both", expand=True)
-        vscroll.pack(side="right", fill="y")
+        self.scroll_frame.bind(
+            '<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox('all'))
+        )
+        win = canvas.create_window((0, 0), window=self.scroll_frame, anchor='nw')
+        canvas.bind('<Configure>', lambda e: canvas.itemconfig(win, width=e.width))
+        canvas.configure(yscrollcommand=scrollbar.set)
 
-        self.scrollable_frame = body
+        canvas.pack(side='left', fill='both', expand=True)
+        scrollbar.pack(side='right', fill='y')
+
+        # Build billing section
         self._build_billing_section()
 
-    def _build_footer(self) -> None:
-        bar = tk.Frame(self.root, bg=self.colors["bg"], pady=20)
-        bar.pack(side="bottom", fill="x")
+    def _build_footer(self):
+        footer = tk.Frame(self.root, bg=self.colors['bg'], pady=10)
+        footer.pack(fill='x', side='bottom')
 
-        tk.Button(
-            bar,
-            text="Submit Billing",
-            font=("Arial", 12),
-            command=self._submit,
-            bg=self.colors["accent"],
-            fg="white",
-            padx=20,
-            pady=8,
-            bd=0,
-        ).pack(side="right", padx=20)
-
-        tk.Button(
-            bar,
-            text="Exit",
-            font=("Arial", 12),
-            command=self._back_to_menu,
-            bg=self.colors["danger"],
-            fg="white",
-            padx=20,
-            pady=8,
-            bd=0,
-        ).pack(side="right")
-
-    # ───────────────── billing form ─────────────────
-    def _build_billing_section(self) -> None:
-        section = tk.LabelFrame(
-            self.scrollable_frame,
-            text="Billing Information",
-            bg=self.colors["bg"],
-            fg=self.colors["text"],
-            font=("Arial", 14, "bold"),
-            bd=2,
-            relief="groove",
-            padx=10,
-            pady=10,
+        btn_exit = tk.Button(
+            footer, text='🔙 Exit', font=('Arial', 12, 'bold'),
+            bg=self.colors['danger'], fg='white', bd=0,
+            padx=20, pady=8, command=self._back_to_menu
         )
-        section.pack(fill="x", padx=30, pady=15)
+        btn_exit.pack(side='right', padx=10)
 
-        for field in (
-            "Patient Name",
-            "Total Payment",      # editable
-            "Total Charges",      # auto
-            "Balance",            # auto
-            "Payment Method",
-            "Payment Status",
-            "Notes",
-        ):
-            self._build_field(section, field)
+        btn_submit = tk.Button(
+            footer, text='💾 Submit Billing', font=('Arial', 12, 'bold'),
+            bg=self.colors['success'], fg='white', bd=0,
+            padx=20, pady=8, command=self._submit
+        )
+        btn_submit.pack(side='right')
 
-        self._build_items_table(section)
+    def _build_billing_section(self):
+        lf = tk.LabelFrame(
+            self.scroll_frame, text='Billing Information',
+            font=('Arial', 14, 'bold'), padx=10, pady=10,
+            bg=self.colors['bg'], fg=self.colors['text']
+        )
+        lf.pack(fill='x', pady=10)
 
-    def _build_field(self, parent: tk.Widget, field: str) -> None:
-        row = tk.Frame(parent, bg=self.colors["bg"])
-        row.pack(fill="x", pady=6)
+        fields = [
+            ('Patient Name', True),
+            ('Total Payment', True),
+            ('Total Charges', False),
+            ('Balance', False),
+            ('Payment Method', True),
+            ('Payment Status', True),
+            ('Notes', False)
+        ]
+        for name, req in fields:
+            self._build_field(lf, name, req)
 
+        self._build_items_table(lf)
+
+    def _build_field(self, parent, field, required):
+        frm = tk.Frame(parent, bg=self.colors['bg'])
+        frm.pack(fill='x', pady=5)
+        lbl_text = f"{'* ' if required else ''}{field}{'' if required else ' (optional)'}:"
+        lbl_fg = self.colors['required'] if required else self.colors['optional']
         tk.Label(
-            row, text=f"{field}:", font=("Arial", 12),
-            bg=self.colors["bg"], fg=self.colors["text"], anchor="w"
-        ).pack(fill="x")
+            frm, text=lbl_text, font=('Arial', 12), fg=lbl_fg, bg=self.colors['bg']
+        ).pack(anchor='w')
 
         var = tk.StringVar()
         self.form_vars[field] = var
 
-        if field == "Patient Name":
-            names = [f"{p[2]} {p[3]}" for p in self.patients] or ["— no patients —"]
-            self._combo(row, var, ["– select patient –", *names])
-        elif field == "Payment Method":
-            self._combo(row, var, ["– select method –", "Cash", "Insurance"])
-        elif field == "Payment Status":
-            self._combo(row, var, ["– select status –", "Paid", "Unpaid", "Pending"])
-        elif field in ("Total Charges", "Balance"):
-            tk.Entry(row, textvariable=var, font=("Arial", 12), state="readonly")\
-                .pack(fill="x", pady=5)
-            var.set("0.00")
-        elif field == "Total Payment":
-            tk.Entry(row, textvariable=var, font=("Arial", 12)).pack(fill="x", pady=5)
-            # update balance whenever cashier types
-            var.trace_add("write", self._update_balance)
+        if field == 'Patient Name':
+            names = [f"{p[2]} {p[3]}" for p in self.patients] or ['— no patients —']
+            cb = self._make_combo(frm, var, ['– select patient –'] + names)
+            self.combos[field] = cb
+        elif field == 'Payment Method':
+            cb = self._make_combo(frm, var, ['– select method –', 'Cash', 'Insurance'])
+            self.combos[field] = cb
+        elif field == 'Payment Status':
+            cb = self._make_combo(frm, var, ['– select status –', 'Paid', 'Unpaid', 'Pending'])
+            self.combos[field] = cb
+        elif field in ('Total Charges', 'Balance'):
+            ent = tk.Entry(frm, textvariable=var, font=('Arial', 12), state='readonly')
+            ent.pack(fill='x', pady=2)
+            var.set('0.00')
+        elif field == 'Total Payment':
+            ent = tk.Entry(frm, textvariable=var, font=('Arial', 12))
+            ent.pack(fill='x', pady=2)
+            ent.bind('<FocusOut>', lambda e, v=var, f=field: self._validate_numeric(v, f))
+            var.trace_add('write', self._update_balance)
         else:  # Notes
-            tk.Entry(row, textvariable=var, font=("Arial", 12)).pack(fill="x", pady=5)
+            tk.Entry(frm, textvariable=var, font=('Arial', 12)).pack(fill='x', pady=2)
 
-    # ---------- items table ----------
-    def _build_items_table(self, parent: tk.Widget) -> None:
-        box = tk.LabelFrame(
-            parent,
-            text="Items Used",
-            bg=self.colors["bg"],
-            fg=self.colors["text"],
-            font=("Arial", 12, "bold"),
-            padx=10,
-            pady=6,
-        )
-        box.pack(fill="both", expand=True, pady=10)
-
-        cols = ("Item", "Qty", "Unit Price", "Line Total")
-        self.tree = ttk.Treeview(box, columns=cols, show="headings", height=6)
-        for col in cols:
-            self.tree.heading(col, text=col, anchor="w")
-            self.tree.column(col, anchor="w", width=150 if col == "Item" else 90)
-        self.tree.pack(fill="both", expand=True, side="left", padx=(0, 5))
-
-        ttk.Scrollbar(box, orient="vertical", command=self.tree.yview).pack(
-            fill="y", side="right"
-        )
-
-        btns = tk.Frame(parent, bg=self.colors["bg"])
-        btns.pack(anchor="e", pady=(5, 0))
-
-        tk.Button(
-            btns,
-            text="➕  Add Item",
-            command=self._open_item_dialog,
-            font=("Arial", 11),
-            bg=self.colors["accent"],
-            fg="white",
-            bd=0,
-            padx=12,
-            pady=4,
-        ).pack(side="left", padx=4)
-
-        tk.Button(
-            btns,
-            text="🗑  Remove Selected",
-            command=self._remove_selected,
-            font=("Arial", 11),
-            bg=self.colors["danger"],
-            fg="white",
-            bd=0,
-            padx=12,
-            pady=4,
-        ).pack(side="left", padx=4)
-
-    # ---------- small helpers ----------
-    def _combo(self, parent: tk.Widget, sv: tk.StringVar, values: list[str]) -> None:
-        cb = ttk.Combobox(parent, values=values, state="readonly", font=("Arial", 12))
+    def _make_combo(self, parent, stringvar, values):
+        cb = ttk.Combobox(parent, values=values, state='readonly', font=('Arial', 12))
         cb.current(0)
-        sv.set("")
-        cb.pack(fill="x", pady=5)
-        cb.bind("<<ComboboxSelected>>", lambda _e, var=sv, box=cb: var.set(box.get()))
+        stringvar.set('')
+        cb.pack(fill='x', pady=2)
+        cb.bind('<<ComboboxSelected>>', lambda e: stringvar.set(cb.get()))
+        return cb
 
-    # ───────────────── item dialog ─────────────────
-    def _open_item_dialog(self) -> None:
+    def _build_items_table(self, parent):
+        frm = tk.LabelFrame(
+            parent, text='Items Used', font=('Arial', 12, 'bold'),
+            padx=10, pady=10, bg=self.colors['bg'], fg=self.colors['text']
+        )
+        frm.pack(fill='both', expand=True, pady=10)
+
+        cols = ('Item', 'Qty', 'Unit Price', 'Line Total')
+        self.tree = ttk.Treeview(frm, columns=cols, show='headings', height=6)
+        for c in cols:
+            self.tree.heading(c, text=c)
+            self.tree.column(c, width=120 if c=='Item' else 80)
+        self.tree.pack(side='left', fill='both', expand=True)
+        ttk.Scrollbar(frm, orient='vertical', command=self.tree.yview).pack(side='right', fill='y')
+
+        # buttons
+        btnf = tk.Frame(parent, bg=self.colors['bg'])
+        btnf.pack(fill='x', pady=5)
+        tk.Button(
+            btnf, text='➕ Add Item', bg=self.colors['accent'], fg='white', bd=0,
+            font=('Arial',11), padx=10, pady=5,
+            command=self._open_item_dialog
+        ).pack(side='left', padx=5)
+        tk.Button(
+            btnf, text='🗑 Remove Selected', bg=self.colors['danger'], fg='white', bd=0,
+            font=('Arial',11), padx=10, pady=5,
+            command=self._remove_selected
+        ).pack(side='left')
+
+    def _validate_numeric(self, var, field):
+        val = var.get().strip()
+        if not re.match(r'^\d+(?:\.\d{1,2})?$', val):
+            messagebox.showerror('Invalid', f"{field} must be a valid number (up to two decimals).", parent=self.root)
+            var.set('')
+            return False
+        return True
+
+    def _open_item_dialog(self):
         dlg = tk.Toplevel(self.root)
-        dlg.title("Select Item")
+        dlg.title('Select Item')
         dlg.grab_set()
         dlg.resizable(False, False)
+        
+        tk.Label(dlg, text='Item:', font=('Arial',12)).grid(row=0, column=0, padx=8, pady=8)
+        tk.Label(dlg, text='Quantity:', font=('Arial',12)).grid(row=1, column=0, padx=8, pady=8)
 
-        tk.Label(dlg, text="Item:", font=("Arial", 12)).grid(row=0, column=0, padx=8, pady=8)
-        tk.Label(dlg, text="Quantity:", font=("Arial", 12)).grid(row=1, column=0, padx=8, pady=8)
-
-        item_var, qty_var = tk.StringVar(), tk.StringVar(value="1")
-        items = [row[2] for row in self.inventory]  # col 1 = item
-        ttk.Combobox(dlg, textvariable=item_var, values=items, state="readonly")\
-            .grid(row=0, column=1, padx=8, pady=8)
+        item_var = tk.StringVar()
+        qty_var = tk.StringVar(value='1')
+        items = [r[2] for r in self.inventory]
+        cb = ttk.Combobox(dlg, textvariable=item_var, values=items, state='readonly')
+        cb.grid(row=0, column=1, padx=8, pady=8)
         if items:
-            item_var.set(items[0])
+            cb.current(0); item_var.set(items[0])
+        tk.Entry(dlg, textvariable=qty_var, width=6).grid(row=1, column=1, padx=8, pady=8)
 
-        tk.Entry(dlg, textvariable=qty_var, width=8).grid(row=1, column=1, padx=8, pady=8)
-
-        def _add() -> None:
+        def add_and_close():
             try:
                 qty = int(qty_var.get())
-                if qty <= 0:
-                    raise ValueError
+                if qty<1: raise ValueError
             except ValueError:
-                messagebox.showerror("Invalid", "Quantity must be a positive integer.", parent=dlg)
+                messagebox.showerror('Invalid','Quantity must be positive integer.', parent=dlg)
                 return
-
             name = item_var.get()
-            rec = next((r for r in self.inventory if r[2] == name), None)
-            if rec is None:
-                messagebox.showerror("Error", "Item not found.", parent=dlg)
+            rec = next((r for r in self.inventory if r[2]==name), None)
+            if not rec:
+                messagebox.showerror('Error','Item not found.', parent=dlg)
                 return
-
-            unit_price = float(rec[5])      # col 3 = unit price
-            line_total = unit_price * qty
-            self.item_rows.append((name, qty, unit_price, line_total))
-            self.tree.insert("", "end", values=(name, qty, f"{unit_price:.2f}", f"{line_total:.2f}"))
+            unit = float(rec[5])
+            total = unit*qty
+            self.item_rows.append((name, qty, unit, total))
+            self.tree.insert('', 'end', values=(name, qty, f"{unit:.2f}", f"{total:.2f}"))
             self._update_total()
             dlg.destroy()
 
-        tk.Button(dlg, text="Add", command=_add, width=12)\
-            .grid(row=2, column=0, columnspan=2, pady=10)
+        tk.Button(dlg, text='Add', width=12, command=add_and_close).grid(row=2, column=0, columnspan=2, pady=10)
 
-    def _remove_selected(self) -> None:
+    def _remove_selected(self):
         for iid in self.tree.selection():
-            val = self.tree.item(iid, "values")
-            self.item_rows = [
-                row for row in self.item_rows if not (row[0] == val[0] and str(row[1]) == val[1])
-            ]
+            vals = self.tree.item(iid,'values')
+            self.item_rows = [r for r in self.item_rows if not (r[0]==vals[0] and str(r[1])==vals[1])]
             self.tree.delete(iid)
         self._update_total()
 
-    # ---------- totals & balance ----------
-    def _update_total(self) -> None:
-        self.form_vars["Total Charges"].set(f"{sum(r[3] for r in self.item_rows):.2f}")
+    def _update_total(self):
+        total = sum(r[3] for r in self.item_rows)
+        self.form_vars['Total Charges'].set(f"{total:.2f}")
         self._update_balance()
 
-    def _update_balance(self, *_: object) -> None:
-        """Balance = Total Payment − Total Charges (positive ⇒ change)."""
+    def _update_balance(self, *args):
         try:
-            payment = float(self.form_vars["Total Payment"].get())
-        except ValueError:
-            payment = 0.0
+            pay = float(self.form_vars['Total Payment'].get())
+        except:
+            pay = 0.0
         try:
-            charges = float(self.form_vars["Total Charges"].get())
-        except ValueError:
+            charges = float(self.form_vars['Total Charges'].get())
+        except:
             charges = 0.0
-        self.form_vars["Balance"].set(f"{charges - payment:.2f}")
+        bal = charges - pay
+        self.form_vars['Balance'].set(f"{bal:.2f}")
+        # auto-set status
+        cb = self.combos.get('Payment Status')
+        if cb:
+            vals = list(cb['values'])
+            target = 'Paid' if abs(bal)<0.005 else 'Unpaid'
+            if target in vals:
+                idx = vals.index(target)
+                cb.current(idx)
+                self.form_vars['Payment Status'].set(target)
 
-    # ───────────────── submit ─────────────────
-    def _submit(self) -> None:
-        header = {fld: var.get().strip() for fld, var in self.form_vars.items()}
-        missing = [f for f, v in header.items() if not v and f not in ("Total Charges", "Balance")]
+    def _submit(self):
+        data = {k:v.get().strip() for k,v in self.form_vars.items()}
+        # validate required
+        missing=[]
+        for f in ['Patient Name','Total Payment','Payment Method','Payment Status']:
+            v = data.get(f,'')
+            if not v or v.startswith('–'):
+                missing.append(f)
         if missing:
-            messagebox.showwarning("Missing", "Please fill / choose:\n• " + "\n• ".join(missing))
+            messagebox.showwarning('Missing Fields','Complete required: '+' '.join(missing), parent=self.root)
             return
         if not self.item_rows:
-            messagebox.showwarning("Missing", "Add at least one inventory item.")
+            messagebox.showwarning('Missing Items','Add at least one inventory item.', parent=self.root)
             return
-
-        patient_name = header["Patient Name"]
-        patient_id = next((p[0] for p in self.patients if f"{p[2]} {p[3]}" == patient_name), None)
-        if patient_id is None:
-            messagebox.showerror("Error", "Selected patient not found.")
+        # find patient id
+        pid = next((p[0] for p in self.patients if f"{p[2]} {p[3]}"==data['Patient Name']), None)
+        if pid is None:
+            messagebox.showerror('Error','Patient not found.', parent=self.root)
             return
-
-        item_details = "\n".join(f"{name}  x{qty}  @ {unit:.2f} = {total:.2f}" for name, qty, unit, total in self.item_rows)
-
-        # Update inventory per item
-        for name, qty, unit, total in self.item_rows:
-            # Find the inventory entry
-            for row in self.inventory:
-                item_id = row[0]
-                item_name = row[2]
-                item_qty = row[4]
-                item_price = row[5]
-                if name == item_name:
-                    try:
-                        new_qty = int(item_qty) - int(qty)
-                        new_total_price = float(item_price) * new_qty
-                    except ValueError:
-                        messagebox.showerror("Error", f"Invalid quantity or price data for item '{name}'")
-                        return
-
-                    fnc.database_con().Record_edit(
-                        "inventory",
-                        "quantity",
-                        new_qty,
-                        "id",
-                        item_id
-                    )
-                    fnc.database_con().Record_edit(
-                        "inventory",
-                        "totalPrice",
-                        new_total_price,
-                        "id",
-                        item_id
-                    )
+        # update inventory
+        for name, qty, _, _ in self.item_rows:
+            for r in self.inventory:
+                if r[2]==name:
+                    new_qty = int(r[4]) - qty
+                    fnc.database_con().Record_edit('inventory','quantity',new_qty,'id',r[0])
+                    fnc.database_con().Record_edit('inventory','totalPrice',float(r[5])*new_qty,'id',r[0])
                     break
-            else:
-                messagebox.showerror("Error", f"Item '{name}' not found in inventory.")
-                return
-
-        # Insert billing record
+        # insert billing
+        details = '\n'.join(f"{n} x{q} @ {u:.2f} = {t:.2f}" for n,q,u,t in self.item_rows)
         fnc.database_con().insert(
-            "billing",
-            (
-                'patientID',
-                'patientName',
-                'itemused',
-                'totalpayment',
-                'totalcharges',
-                'balance',
-                'paymentMethod',
-                'paymentStatus',
-                'notes',
-                'staffID'
-            ),
-            [
-                patient_id,
-                patient_name,
-                item_details,
-                header["Total Payment"],
-                header["Total Charges"],
-                header["Balance"],
-                header["Payment Method"],
-                header["Payment Status"],
-                header["Notes"],
-                self.staff_id,
-            ],
+            'billing',
+            ('patientID','patientName','itemused','totalpayment','totalcharges','balance','paymentMethod','paymentStatus','notes','staffID'),
+            [pid, data['Patient Name'], details, data['Total Payment'], data['Total Charges'], data['Balance'], data['Payment Method'], data['Payment Status'], data.get('Notes',''), self.staff_id]
         )
-
         self._clear_form()
 
-
-    # ───────────────── misc ─────────────────
-    def _clear_form(self) -> None:
-        for fld, var in self.form_vars.items():
-            var.set("0.00" if fld in ("Total Charges", "Balance") else "")
-            if fld in self.combos:
-                self.combos[fld].current(0)
+    def _clear_form(self):
+        for f,var in self.form_vars.items():
+            if f in ('Total Charges','Balance'):
+                var.set('0.00')
+            else:
+                var.set('')
+            if f in self.combos:
+                self.combos[f].current(0)
         self.tree.delete(*self.tree.get_children())
         self.item_rows.clear()
 
-    def _back_to_menu(self) -> None:
+    def _back_to_menu(self):
         self.root.destroy()
         Billing.main(self.staff_id)
 
 
-# ───────────────── manual test ─────────────────
-def main(staff_id: int = 8) -> None:  # pragma: no cover
-    root = tk.Tk()
+def main(staff_id:int=8):
+    root=tk.Tk()
     BillingForm(root, staff_id)
     root.mainloop()
-
-
-if __name__ == "__main__":  # pragma: no cover
-    main()

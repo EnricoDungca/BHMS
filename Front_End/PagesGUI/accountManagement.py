@@ -3,7 +3,6 @@ from tkinter import font, ttk
 import sys, os
 from datetime import date
 
-# Ensure relative import paths work after PyInstaller bundling
 BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
 sys.path.insert(0, os.path.join(BASE_DIR, "BHMS"))
 from Back_End import systemfnc as fnc
@@ -27,31 +26,29 @@ class AccountManagementApp:
         self.root.attributes('-fullscreen', False)
 
     def init_fonts(self):
-        self.title_font = font.Font(family="Arial", size=18, weight="bold")
-        self.header_font = font.Font(family="Arial", size=12, weight="bold")
-        self.nav_font = font.Font(family="Arial", size=11)
-        self.button_font = font.Font(family="Arial", size=10)
-        self.table_font = font.Font(family="Arial", weight="bold", size=10)
-        self.small_font = font.Font(family="Arial", size=9)
+        self.title_font = font.Font(family="Arial", size=22, weight="bold")
+        self.header_font = font.Font(family="Arial", size=14, weight="bold")
+        self.nav_font = font.Font(family="Arial", size=12)
+        self.button_font = font.Font(family="Arial", size=12)
+        self.table_font = font.Font(family="Arial", size=12)
+        self.small_font = font.Font(family="Arial", size=11)
 
     def create_topbar(self):
-        topbar = tk.Frame(self.root, bg="#111111", height=60)
+        topbar = tk.Frame(self.root, bg="#111111", height=70)
         topbar.pack(fill="x")
 
         topbar.grid_columnconfigure(0, weight=1)
         topbar.grid_columnconfigure(1, weight=3)
         topbar.grid_columnconfigure(2, weight=1)
 
-        logo = tk.Label(topbar, text="Birthing Home", font=("Helvetica", 14, "bold"),
+        logo = tk.Label(topbar, text="🏥 Birthing Home", font=("Helvetica", 16, "bold"),
                         bg="#111111", fg="white")
-        logo.grid(row=0, column=0, sticky="w", padx=20, pady=15)
-
-        # Removed all nav items
+        logo.grid(row=0, column=0, sticky="w", padx=20, pady=20)
 
         logout_btn = tk.Button(
             topbar,
-            text="Log Out",
-            font=("Helvetica", 10),
+            text="🔒 Log Out",
+            font=self.button_font,
             bg="#111111",
             fg="white",
             activebackground="#222222",
@@ -68,7 +65,7 @@ class AccountManagementApp:
 
     def create_content(self):
         content_frame = tk.Frame(self.root, bg="white")
-        content_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+        content_frame.pack(fill=tk.BOTH, expand=True, padx=30, pady=30)
 
         self.create_header(content_frame)
         self.create_search(content_frame)
@@ -78,41 +75,42 @@ class AccountManagementApp:
         self.root.destroy()
         registerNewAccount.main()
 
-
     def create_header(self, parent):
         header_frame = tk.Frame(parent, bg="white")
-        header_frame.pack(fill=tk.X)
+        header_frame.pack(fill=tk.X, pady=(0, 15))
 
-        # Use grid for proper alignment between left and right sides
         header_frame.grid_columnconfigure(0, weight=1)
         header_frame.grid_columnconfigure(1, weight=0)
 
-        title_label = tk.Label(header_frame, text="Account Management", font=self.title_font, bg="white")
+        title_label = tk.Label(header_frame, text="👤 Account Management", font=self.title_font, bg="white")
         title_label.grid(row=0, column=0, sticky="w")
+        
+        notice_label = tk.Label(header_frame, text="Notice: Please be careful when deleting an account, as it will also delete all records created by that account.", font=self.small_font, bg="white", fg="red")
+        notice_label.grid(row=1, column=0, sticky="w")
 
         register_btn = tk.Button(
             header_frame,
-            text="+ Register New Account",
+            text="➕ Register New Account",
             font=self.button_font,
             bg="#111111",
             fg="white",
-            padx=10,
-            pady=5,
+            padx=15,
+            pady=8,
             relief=tk.FLAT,
             cursor="hand2",
-            command=self.register_account  # Placeholder for your logic
+            command=self.register_account
         )
         register_btn.grid(row=0, column=1, sticky="e")
 
     def create_search(self, parent):
-        search_frame = tk.Frame(parent, bg="white", pady=20)
+        search_frame = tk.Frame(parent, bg="white", pady=10)
         search_frame.pack(fill=tk.X)
 
-        tk.Label(search_frame, text="Search: ", bg="white").pack(side=tk.LEFT)
+        tk.Label(search_frame, text="🔍 Search: ", bg="white", font=self.button_font).pack(side=tk.LEFT)
 
         self.search_entry = tk.Entry(search_frame, font=self.table_font, width=50, relief=tk.SOLID, bd=1)
         self.search_entry.insert(0, "Search accounts...")
-        self.search_entry.pack(side=tk.LEFT, padx=5)
+        self.search_entry.pack(side=tk.LEFT, padx=10)
         self.search_entry.bind("<FocusIn>", self.clear_placeholder)
         self.search_entry.bind("<FocusOut>", self.restore_placeholder)
         self.search_entry.bind("<KeyRelease>", self.perform_search)
@@ -129,7 +127,7 @@ class AccountManagementApp:
         dir_frame = tk.Frame(parent, bg="white", bd=1, relief=tk.SOLID, padx=20, pady=20)
         dir_frame.pack(fill=tk.BOTH, expand=True)
 
-        tk.Label(dir_frame, text="Account Directory", font=self.header_font, bg="white").pack(anchor=tk.W)
+        tk.Label(dir_frame, text="📁 Account Directory", font=self.header_font, bg="white").pack(anchor=tk.W)
         tk.Label(dir_frame, text="Manage and view all registered accounts", font=self.small_font,
                  fg="#666666", bg="white").pack(anchor=tk.W, pady=(0, 15))
 
@@ -137,13 +135,13 @@ class AccountManagementApp:
         table_frame.pack(fill=tk.BOTH, expand=True)
 
         headers = ["Account ID", "Email", "Role", "Status", "Actions"]
-        col_widths = [150, 300, 300, 200, 200]
+        col_widths = [150, 300, 250, 200, 200]
 
-        header_row = tk.Frame(table_frame, bg="#f5f5f5")
+        header_row = tk.Frame(table_frame, bg="#f0f0f0")
         header_row.pack(fill=tk.X)
         for i, header in enumerate(headers):
             tk.Label(header_row, text=header, font=self.table_font,
-                     bg="#f5f5f5", width=col_widths[i] // 10, anchor="w").pack(side=tk.LEFT)
+                     bg="#f0f0f0", width=col_widths[i] // 10, anchor="w").pack(side=tk.LEFT)
 
         body_frame = tk.Frame(table_frame, bg="white")
         body_frame.pack(fill=tk.BOTH, expand=True)
@@ -176,7 +174,7 @@ class AccountManagementApp:
 
     def create_account_row(self, parent, account, col_widths):
         row_frame = tk.Frame(parent, bg="white")
-        row_frame.pack(fill=tk.X, pady=3)
+        row_frame.pack(fill=tk.X, pady=4)
 
         status_color = {
             "Active": "#4CAF50",
@@ -186,21 +184,22 @@ class AccountManagementApp:
         values = [account["ID"], account["name"], account["role"], account["status"]]
         for i, val in enumerate(values):
             fg = status_color if i == 3 else "black"
-            tk.Label(row_frame, text=val, font="Arial 10", bg="white", fg=fg,
+            tk.Label(row_frame, text=val, font=self.table_font, bg="white", fg=fg,
                      width=col_widths[i] // 10, anchor="w").pack(side=tk.LEFT)
 
         actions_frame = tk.Frame(row_frame, bg="white")
         actions_frame.pack(side=tk.LEFT, padx=10)
 
-        tk.Button(actions_frame, text="Edit", font=self.small_font, bg="black", fg="white",
-                  bd=0, relief=tk.FLAT, width=4,
-                  command= lambda: self.edit_account(account["ID"]))\
-.pack(side=tk.LEFT)
+        edit_btn = tk.Button(actions_frame, text="✏️ Edit", font=self.small_font, bg="black", fg="white",
+                             bd=0, relief=tk.FLAT, width=8,
+                             cursor="hand2",
+                             command=lambda: self.edit_account(account["ID"]))
+        edit_btn.pack(side=tk.LEFT)
 
     def edit_account(self, id):
         self.root.destroy()
         EdittForm.main(None, id, "accounts", "accountManagement")
-    
+
     def perform_search(self, event=None):
         query = self.search_entry.get().lower().strip()
         for widget in self.scrollable_frame.winfo_children():
@@ -218,8 +217,7 @@ class AccountManagementApp:
             }
 
             if query in str(account["ID"]).lower() or query in account["name"].lower() or query in account["role"].lower():
-                self.create_account_row(self.scrollable_frame, account, [150, 300, 300, 200, 200])
-
+                self.create_account_row(self.scrollable_frame, account, [150, 300, 250, 200, 200])
 
 def main():
     root = tk.Tk()

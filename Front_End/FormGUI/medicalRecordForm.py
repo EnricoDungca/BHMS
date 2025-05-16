@@ -4,7 +4,8 @@ from tkinter.font import Font
 import sys
 from tkcalendar import DateEntry
 import datetime
-import sys, os
+import re
+import os
 
 # Ensure relative import paths work after PyInstaller bundling
 BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
@@ -24,11 +25,11 @@ class MedicalRecordForm:
 
         self.colors = {
             "bg": "#ffffff",
-            "accent": "#000000",
+            "accent": "#007acc",
             "text": "#333333",
             "light_bg": "#f5f5f5",
             "success": "#2ecc71",
-            "danger": "#e74c3c",
+            "danger": "#d60000",
             "section_bg": "#f9f9f9"
         }
 
@@ -41,16 +42,17 @@ class MedicalRecordForm:
         self.create_widgets()
 
     def create_widgets(self):
-        header_frame = tk.Frame(self.root, bg=self.colors["accent"], height=70)
+        header_frame = tk.Frame(self.root, bg="black", height=70)
         header_frame.pack(fill="x")
 
         back_btn = tk.Button(header_frame, text="⟵ Back", font=("Arial", 12),
-                             command=self.back, bg=self.colors["accent"],
+                             command=self.back, bg="black",
                              fg="white", bd=0, padx=10,
                              activebackground="#333333", activeforeground="white")
         back_btn.place(x=10, y=20)
 
-        title = tk.Label(header_frame, text="Medical Record Form", font=("Arial", 18, "bold"), bg=self.colors["accent"], fg="white")
+        title = tk.Label(header_frame, text="Medical Record Form", font=("Arial", 18, "bold"),
+                         bg="black", fg="white")
         title.pack(pady=15)
 
         container = tk.Frame(self.root, bg=self.colors["bg"])
@@ -80,121 +82,165 @@ class MedicalRecordForm:
 
     def _on_mousewheel(self, event):
         if event.delta:
-            self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
         elif event.num == 4:
             self.canvas.yview_scroll(-1, "units")
         elif event.num == 5:
             self.canvas.yview_scroll(1, "units")
-            
+
     def create_checkup_form(self):
-        section_title = "Check-up Form"
-        section = tk.LabelFrame(self.scrollable_frame, text=section_title, font=("Arial", 14, "bold"),
-                                bg=self.colors["section_bg"], fg=self.colors["text"],
-                                bd=2, relief="groove", padx=10, pady=10)
-        section.pack(fill="x", padx=30, pady=15)
+        title = "Check-up Form"
+        section = self.create_section_frame(title)
 
-        fields = ["Patient Name", "Date"]
-        for field in fields:
-            self.create_entry_field(section, section_title, field)
+        required_fields = ["Patient Name*", "Date*", "Blood Pressure*", "Heart Rate*", "Respiratory Rate*", "Temperature*", "Oxygen Saturation*","Diagnosis*", "Prescription*"]
 
-        vital_header = tk.Label(section, text="Vital Signs", font=("Arial", 12, "bold"), bg=self.colors["section_bg"])
-        vital_header.pack(fill="x", pady=5)
+        for field in required_fields:
+            self.create_entry_field(section, title, field)
 
-        vitals = ["Blood Pressure", "Heart Rate", "Respiratory Rate", "Temperature", "Oxygen Saturation"]
-        for vital in vitals:
-            self.create_entry_field(section, section_title, f"{vital}")
-            
-        frame = tk.Frame(section, bg=self.colors["section_bg"])
-        frame.pack(fill="x", pady=5)
-        label = tk.Label(frame, text="Diagnosis:", font=("Arial", 12), bg=self.colors["section_bg"], anchor="w")
-        label.pack(fill="x")
-        text_frame = tk.Frame(frame)
-        text_frame.pack(fill="x")
-        text_widget = tk.Text(text_frame, height=4, font=("Arial", 11), wrap="word",
-                            bd=0, highlightthickness=1,
-                            highlightbackground="#e0e0e0", highlightcolor=self.colors["accent"])
-        text_widget.pack(side="left", fill="x", expand=True, ipady=6)
-        scroll = ttk.Scrollbar(text_frame, orient="vertical", command=text_widget.yview)
-        scroll.pack(side="right", fill="y")
-        text_widget.configure(yscrollcommand=scroll.set)
-        self.form_vars[section_title]["Diagnosis"] = text_widget
+        self.create_textarea(section, title, "Diagnosis")
 
-        self.create_entry_field(section, section_title, "Prescription")
+        self.create_submit_button(section, title)
 
-        submit_btn = tk.Button(section, text="Submit", font=("Arial", 12),
-                            bg=self.colors["accent"], fg="white", padx=15, pady=6,
-                            command=lambda: self.submit_section(section_title),
-                            activebackground="#333333", activeforeground="white")
-        submit_btn.pack(pady=10)
+        self.create_field_note(section)
 
     def create_delivery_form(self):
-        section_title = "Normal Spontaneous Delivery Form"
-        section = tk.LabelFrame(self.scrollable_frame, text=section_title, font=("Arial", 14, "bold"),
+        title = "Normal Spontaneous Delivery Form"
+        section = self.create_section_frame(title)
+
+        required_fields = ["Patient Name*", "Date of Delivery*", "Time of Delivery*", "Delivery Notes*", "Baby Weight*", "Apgar Score*"]
+
+        for field in required_fields:
+            self.create_entry_field(section, title, field)
+
+        self.create_submit_button(section, title)
+
+        self.create_field_note(section)
+
+    def create_section_frame(self, title):
+        section = tk.LabelFrame(self.scrollable_frame, text=title, font=("Arial", 14, "bold"),
                                 bg=self.colors["section_bg"], fg=self.colors["text"],
-                                bd=2, relief="groove", padx=10, pady=10)
+                                bd=2, relief="groove", padx=15, pady=15)
         section.pack(fill="x", padx=30, pady=15)
-
-        fields = ["Patient Name", "Date of Delivery", "Time of Delivery", "Delivery Notes", "Baby Weight", "Apgar Score"]
-        for field in fields:
-            self.create_entry_field(section, section_title, field)
-
-        submit_btn = tk.Button(section, text="Submit", font=("Arial", 12),
-                            bg=self.colors["accent"], fg="white", padx=15, pady=6,
-                            command=lambda: self.submit_section(section_title),
-                            activebackground="#333333", activeforeground="white")
-        submit_btn.pack(pady=10)
+        return section
 
     def create_entry_field(self, parent, section_title, field):
         frame = tk.Frame(parent, bg=self.colors["section_bg"])
         frame.pack(fill="x", pady=5)
 
-        label = tk.Label(frame, text=field + ":", font=("Arial", 12), bg=self.colors["section_bg"], anchor="w")
+        is_required = field.endswith("*")
+        label_color = self.colors["danger"] if is_required else self.colors["text"]
+        clean_field = field.rstrip("*").strip()
+
+        label = tk.Label(frame, text=clean_field + (" *" if is_required else ""),
+                         font=("Arial", 12), fg=label_color,
+                         bg=self.colors["section_bg"], anchor="w")
         label.pack(fill="x")
 
         var = tk.StringVar()
 
-        if field == "Patient Name":
+        if clean_field == "Patient Name":
             patient_names = [f"{name[2]} {name[3]}" for name in self.names]
             combobox = ttk.Combobox(frame, textvariable=var, values=patient_names, font=("Arial", 11), state="readonly")
             combobox.pack(fill="x", ipady=6)
-        elif "Date" in field:
+        elif "Date" in clean_field:
             date_entry = DateEntry(frame, textvariable=var, font=("Arial", 11), background="darkblue",
-                                foreground="white", borderwidth=2, date_pattern='yyyy-mm-dd',
-                                maxdate=datetime.date.today())
+                                   foreground="white", borderwidth=2, date_pattern='yyyy-mm-dd',
+                                   maxdate=datetime.date.today())
             date_entry.pack(fill="x", ipady=6)
-        elif "Time" in field:
-            hours = [f"{h:02d}:{m:02d}" for h in range(24) for m in (range(60))]
-            time_combobox = ttk.Combobox(frame, textvariable=var, values=hours, font=("Arial", 11), state="writeonly")
+        elif "Time" in clean_field:
+            hours = [f"{h:02d}:{m:02d}" for h in range(24) for m in (0, 15, 30, 45)]
+            time_combobox = ttk.Combobox(frame, textvariable=var, values=hours, font=("Arial", 11), state="readonly")
             time_combobox.pack(fill="x", ipady=6)
         else:
             entry = tk.Entry(frame, textvariable=var, font=("Arial", 11), bd=0,
-                            highlightthickness=1, highlightbackground="#e0e0e0", highlightcolor=self.colors["accent"])
+                             highlightthickness=1, highlightbackground="#e0e0e0", highlightcolor=self.colors["accent"])
             entry.pack(fill="x", ipady=6)
 
-        self.form_vars[section_title][field] = var
+        self.form_vars[section_title][clean_field] = var
+
+    def create_textarea(self, parent, section_title, field):
+        frame = tk.Frame(parent, bg=self.colors["section_bg"])
+        frame.pack(fill="x", pady=5)
+
+        label = tk.Label(frame, text=field + ":", font=("Arial", 12),
+                         bg=self.colors["section_bg"], anchor="w")
+        label.pack(fill="x")
+
+        text_frame = tk.Frame(frame)
+        text_frame.pack(fill="x")
+
+        text_widget = tk.Text(text_frame, height=4, font=("Arial", 11), wrap="word",
+                              bd=0, highlightthickness=1,
+                              highlightbackground="#e0e0e0", highlightcolor=self.colors["accent"])
+        text_widget.pack(side="left", fill="x", expand=True, ipady=6)
+
+        scroll = ttk.Scrollbar(text_frame, orient="vertical", command=text_widget.yview)
+        scroll.pack(side="right", fill="y")
+        text_widget.configure(yscrollcommand=scroll.set)
+
+        self.form_vars[section_title][field] = text_widget
+
+    def create_submit_button(self, parent, section_title):
+        submit_btn = tk.Button(parent, text="Submit", font=("Arial", 12),
+                               bg=self.colors["accent"], fg="white", padx=15, pady=6,
+                               command=lambda: self.submit_section(section_title),
+                               activebackground="#333333", activeforeground="white")
+        submit_btn.pack(pady=10)
+
+    def create_field_note(self, parent):
+        note = tk.Label(parent, text="* Required fields", font=("Arial", 10, "italic"),
+                        bg=self.colors["section_bg"], fg=self.colors["danger"], anchor="w")
+        note.pack(fill="x", pady=(0, 5), padx=5)
+
+    def validate_field(self, field_name, value):
+        patterns = {
+            "Blood Pressure": r"^\d{2,3}/\d{2,3}$",
+            "Heart Rate": r"^\d{2,3}$",
+            "Respiratory Rate": r"^\d{1,2}$",
+            "Temperature": r"^\d{2}(\.\d)?$",
+            "Oxygen Saturation": r"^\d{2,3}%?$",
+            "Baby Weight": r"^\d{1,2}(\.\d{1,2})?$",
+            "Apgar Score": r"^\d{1,2}$",
+        }
+        pattern = patterns.get(field_name)
+        if pattern and not re.match(pattern, value):
+            return False
+        return True
 
     def submit_section(self, section_name):
-        values = self.form_vars[section_name].values()
+        raw_values = self.form_vars[section_name]
         data = []
 
-        for var in values:
+        for field, var in raw_values.items():
             if isinstance(var, tk.Text):
-                var = var.get("1.0", "end-1c")
+                value = var.get("1.0", "end-1c").strip()
             else:
-                var = var.get()
-            data.append(var)
+                value = var.get().strip()
+
+            if field.endswith("*") and not value:
+                messagebox.showerror("Validation Error", f"The field '{field}' is required.")
+                return
+
+            clean_field = field.rstrip("*").strip()
+            if not self.validate_field(clean_field, value):
+                messagebox.showerror("Validation Error", f"Invalid format for '{clean_field}'.")
+                return
+
+            data.append(value)
+
         data.append(self.id)
 
         for names in self.names:
             if data[0] == f"{names[2]} {names[3]}":
                 data.insert(0, names[0])
 
-        print(data)
-
         if section_name == "Check-up Form":
-            fnc.database_con().insert("checkup", ("patientID", "patientName", "date", "bloodPressure", "heartRate", "respiratoryRate", "temperature", "oxygenSaturation", "diagnosis", "prescription", "staffID"), data)
+            fnc.database_con().insert("checkup", ("patientID", "patientName", "date", "bloodPressure", "heartRate",
+                                                  "respiratoryRate", "temperature", "oxygenSaturation", "diagnosis",
+                                                  "prescription", "staffID"), data)
         elif section_name == "Normal Spontaneous Delivery Form":
-            fnc.database_con().insert("nsd", ("patientID", "patientName", "dateofdelivery", "timeofdelivery", "deliveryNote", "Babyweight", "apgarScore", "staffID"), data)
+            fnc.database_con().insert("nsd", ("patientID", "patientName", "dateofdelivery", "timeofdelivery",
+                                              "deliveryNote", "Babyweight", "apgarScore", "staffID"), data)
 
         self.clear_section(section_name)
 
