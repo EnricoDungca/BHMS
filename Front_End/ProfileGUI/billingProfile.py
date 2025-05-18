@@ -131,7 +131,7 @@ class BillingViewer:
         name_font = Font(family="Arial", size=24, weight="bold")
         full_name = self.billing_data["Patient Information"]["Full Name"]
         tk.Label(hdr,
-                 text=full_name,
+                 text=f"Name: {full_name}",
                  font=name_font,
                  bg=self.colors["section_bg"],
                  fg=self.colors["accent"]
@@ -166,10 +166,10 @@ class BillingViewer:
                       self.format_date(self.billing_data["Billing Details"]["Billing Date"]))
         self.add_item(left, "Description",
                       self.billing_data["Billing Details"]["description"])
-        self.add_item(left, "Total Charges", self.billing_data["Billing Details"]["Total Charges"])
-
-        self.add_item(right, "Total Payments", self.billing_data["Billing Details"]["Total Payments"])
-        self.add_item(right, "Balance", self.billing_data["Billing Details"]["Balance"])
+        self.add_item(left, "Total Charges", f"₱ {self.billing_data["Billing Details"]["Total Charges"]:,.2f}")
+        self.add_item(left, "Total Payments", f"₱ {self.billing_data['Billing Details']['Total Payments']:,.2f}")
+        
+        self.add_item(right, "Balance", f"₱ {self.billing_data['Billing Details']['Balance']:,.2f}")
         self.add_item(right, "Notes", self.billing_data["Billing Details"]["Notes"])
 
         # IMAGE + INSTRUCTIONS

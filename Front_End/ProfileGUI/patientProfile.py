@@ -1,14 +1,15 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, PhotoImage
-from PIL import ImageGrab
-import sys
-import os
+from PIL import ImageGrab, Image, ImageTk
+import sys, os, io
 
 # Ensure relative import paths work after PyInstaller bundling
 BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
 sys.path.insert(0, os.path.join(BASE_DIR, "BHMS"))
 from Back_End import systemfnc as fnc
 from Front_End.PagesGUI import patientRegistration
+from Front_End.ProfileGUI import medicalProfile
+from Front_End.ProfileGUI import billingProfile
 
 
 class PatientProfileApp:
@@ -46,20 +47,49 @@ class PatientProfileApp:
         header = tk.Frame(self.root, bg="#2c3e50", height=80)
         header.pack(side='top', fill='x')
 
-        profile_pic = tk.Canvas(header, width=60, height=60, bg="#ecf0f1", highlightthickness=0)
-        profile_pic.create_text(30, 30, text="Photo", font=('Arial', 10, 'bold'), fill="#2c3e50")
-        profile_pic.pack(side='left', padx=20, pady=10)
+        # Default image
+        profile_image = self.logo_image
 
-        for datainfo in self.registration:
-            if self.patient_id == datainfo[0]:
-                info = tk.Frame(header, bg="#2c3e50")
-                info.pack(side='left', padx=10)
-                tk.Label(info, text=f"{datainfo[2]} {datainfo[3]}", font=('Arial', 20, 'bold'), bg="#2c3e50", fg="white").pack(anchor='w')
-                tk.Label(info, text=f"DOB: {datainfo[4]}   |   Gender: {datainfo[5]}   |   Patient ID: {datainfo[0]}",
-                        font=('Arial', 12), bg="#2c3e50", fg="white").pack(anchor='w')
-        
-        back_btn = tk.Button(header, text="Back", font=("Arial", 12, "bold"), fg="white",
-                            bg="#e74c3c", relief="flat", command= self.back)
+        # Load from DB
+        try:
+            for pid, _, _, filename, blob in fnc.database_con().read("attachment", "*"):
+                if pid == self.patient_id and "profilepic" in filename.lower() and any(ext in filename.lower() for ext in (".jpg", ".jpeg", ".png")):
+                    if blob:
+                        # Debug save
+                        with open("debug_profilepic", "wb") as f:
+                            f.write(blob)
+                        img = Image.open(io.BytesIO(blob))
+                        img = img.resize((60, 60), Image.LANCZOS)
+                        profile_image = ImageTk.PhotoImage(img)
+                    break
+        except Exception as e:
+            print(f"[ERROR] Loading profile pic: {e}")
+
+        # Display image
+        pic_frame = tk.Frame(header, width=60, height=60, bg="#ecf0f1")
+        pic_frame.pack_propagate(False)
+        pic_frame.pack(side='left', padx=20, pady=10)
+
+        profile_label = tk.Label(pic_frame, image=profile_image, bg="#ecf0f1")
+        profile_label.image = profile_image
+        self.current_profile_image = profile_image
+        profile_label.pack(expand=True)
+
+        # Patient info
+        info_frame = tk.Frame(header, bg="#2c3e50")
+        info_frame.pack(side='left', padx=10)
+        found = False
+        for r in self.registration:
+            if r[0] == self.patient_id:
+                tk.Label(info_frame, text=f"{r[2]} {r[3]} {r[4]}", font=('Arial',20,'bold'), bg="#2c3e50", fg="white").pack(anchor='w')
+                tk.Label(info_frame, text=f"DOB: {r[5]} | Gender: {r[6]} | ID: {r[0]}", font=('Arial',12), bg="#2c3e50", fg="white").pack(anchor='w')
+                found = True
+                break
+        if not found:
+            tk.Label(info_frame, text="Patient Not Found", font=('Arial',20,'bold'), bg="#2c3e50", fg="white").pack(anchor='w')
+            tk.Label(info_frame, text=f"ID: {self.patient_id}", font=('Arial',12), bg="#2c3e50", fg="white").pack(anchor='w')
+
+        back_btn = tk.Button(header, text="Back", font=("Arial",12,"bold"), fg="white", bg="#e74c3c", relief="flat", command=self.back)
         back_btn.pack(side="right", padx=20)
         
     
@@ -125,10 +155,10 @@ class PatientProfileApp:
         for datainfo in self.registration:
             if self.patient_id == datainfo[0]:
                 info = {
-                    "Contact": f"{datainfo[6]}\n{datainfo[7]}",
-                    "Address": f"{datainfo[8]}\n{datainfo[9]}\n{datainfo[10]}\n{datainfo[11]}\n{datainfo[12]}\n{datainfo[13]}",
-                    "Emergency Contact": f"{datainfo[14]} ({datainfo[15]})\n{datainfo[16]}/{datainfo[17]}",
-                    "Insurance": f"{datainfo[18]}\n{datainfo[19]}"
+                    "Contact": f"{datainfo[7]}\n{datainfo[8]}",
+                    "Address": f"{datainfo[9]}\n{datainfo[10]}\n{datainfo[11]}\n{datainfo[12]}\n{datainfo[13]}\n{datainfo[14]}",
+                    "Emergency Contact": f"{datainfo[15]} ({datainfo[16]})\n{datainfo[17]}/{datainfo[18]}",
+                    "Insurance": f"{datainfo[19]}\n{datainfo[20]}"
                 }
                 break
 
@@ -200,6 +230,7 @@ class PatientProfileApp:
         for data in self.checkup:
             if self.patient_id == data[2]:
                 checkup_records.append({
+                    "ID": data[0],
                     "Type": "Check-up",
                     "Date": data[4],
                     "Provider": data[12],
@@ -212,6 +243,7 @@ class PatientProfileApp:
         for data in self.nsd:
             if self.patient_id == data[2]:
                 nsd_records.append({
+                    "ID": data[0],
                     "Type": "NSD",
                     "Date of Delivery": data[4],
                     "Time of Delivery": data[5],
@@ -231,6 +263,9 @@ class PatientProfileApp:
                 tk.Label(card, text=f"{record['Date']} - {record['Provider']}", font=("Arial", 14, "bold"), bg="white").pack(anchor="w")
                 tk.Label(card, text=f"Diagnosis: {record['Diagnosis']}", font=("Arial", 12), bg="white").pack(anchor="w", pady=2)
                 tk.Label(card, text=f"Medications: {record['Medications']}", font=("Arial", 12), bg="white").pack(anchor="w", pady=2)
+                
+                view_btn = tk.Button(card, text="View", command=lambda: self.view(self.id, record["ID"], "checkup"), font=("Arial", 12), bg="#3498db", fg="white", relief="flat", padx=12, pady=6, cursor="hand2")
+                view_btn.pack(pady=20)
 
             for record in nsd_records:
                 card = tk.Frame(scroll_frame, bg="white", bd=1, relief="solid", padx=15, pady=10)
@@ -240,7 +275,15 @@ class PatientProfileApp:
                 tk.Label(card, text=f"Delivery Note: {record['Delivery Note']}", font=("Arial", 12), bg="white").pack(anchor="w", pady=2)
                 tk.Label(card, text=f"Baby Weight: {record['Baby Weight']}", font=("Arial", 12), bg="white").pack(anchor="w", pady=2)
                 tk.Label(card, text=f"Apgar Score: {record['Apgar Score']}", font=("Arial", 12), bg="white").pack(anchor="w", pady=2)
+                
+                view_btn = tk.Button(card, text="View", command=lambda: self.view(self.id, record["ID"], "NSD"), font=("Arial", 12), bg="#3498db", fg="white", relief="flat", padx=12, pady=6, cursor="hand2")
+                view_btn.pack(pady=20)
 
+        
+    def view(self, staff_id, patient_id, record_type):
+        self.root.destroy()
+        medicalProfile.main(patient_id, staff_id, record_type)
+        
 
 
     def billing_tab(self, notebook):
@@ -335,7 +378,7 @@ class PatientProfileApp:
         if not files:
             tk.Label(
                 scroll_frame,
-                text="No attachments found.",
+                text="No attachments found.\nTo upload a Profile Picture the file name must be (example: profilepic.(jpg or png)).",
                 font=("Arial", 14),
                 bg="white",
                 fg="gray"

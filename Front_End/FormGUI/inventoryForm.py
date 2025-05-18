@@ -28,7 +28,7 @@ class InventoryForm:
             "required": "#e74c3c"
         }
 
-        self.required_fields = ["Item Name", "Category", "Quantity", "Unit Price"]
+        self.required_fields = ["Item or Service Name", "Category", "Quantity", "Unit Price"]
         self.optional_fields = ["Total Price"]
 
         self.configure_styles()
@@ -100,7 +100,7 @@ class InventoryForm:
             row.pack(fill="x", pady=10)
 
             label_fg = self.colors["required"] if field in self.required_fields else self.colors["text"]
-            suffix = " *" if field in self.required_fields else " (optional)"
+            suffix = " *" if field in self.required_fields else ""
 
             tk.Label(row, text=f"{field}:{suffix}", font=("Arial", 14),
                      bg=self.colors["section_bg"], fg=label_fg, anchor="w"
@@ -149,7 +149,7 @@ class InventoryForm:
     def validate_inputs(self, data):
         errors = []
 
-        if not re.fullmatch(r"[A-Za-z0-9\s\-]+", data["Item Name"]):
+        if not re.fullmatch(r"[A-Za-z0-9\s\-]+", data["Item or Service Name"]):
             errors.append("Item Name should only contain letters, numbers, spaces, or hyphens.")
 
         if not re.fullmatch(r"[A-Za-z0-9\s\-]+", data["Category"]):

@@ -11,7 +11,7 @@ from Front_End.LoginGUI import Login
 
 date_now = datetime.date.today()
 
-def main():
+def main(): 
     try:
         if fnc.database_con().check_connection():
             if date_now.day == 1:

@@ -146,9 +146,9 @@ class PatientManagementApp:
         for r in data:
             patient = {
                 "ID": r[0],
-                "name": f"{r[2]} {r[3]}",
-                "phone": r[6],
-                "email": r[7],
+                "name": f"{r[2]} {r[3]} {r[4]}",
+                "phone": r[7],
+                "email": r[8],
                 "visit": r[1]
             }
             self.add_row(parent, patient, col_w)
@@ -173,9 +173,9 @@ class PatientManagementApp:
         data = fnc.database_con().read("registration", "*")
         data.sort(reverse=True)
         for r in data:
-            name = f"{r[2]} {r[3]}".lower()
+            name = f"{r[2]} {r[3]} {r[4]}".lower()
             if q in name or q in str(r[0]):
-                patient = {"ID":r[0],"name":name.title(),"phone":r[6],"email":r[7],"visit":r[1]}
+                patient = {"ID":r[0],"name":name.title(),"phone":r[7],"email":r[8],"visit":r[1]}
                 self.add_row(self.list_frame, patient, [100,200,150,200,150,200])
 
     def view(self, pid):

@@ -3,9 +3,8 @@ import os
 import tkinter as tk
 from pathlib import Path
 from tkinter import ttk, messagebox
-from tkinter.font import Font
 from tkcalendar import DateEntry
-import re  # At the top of your file (if not already)
+import re
 
 # Ensure relative import paths work after PyInstaller bundling
 BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
@@ -22,23 +21,16 @@ def main(staff_id: int):
 
 
 class PatientRegistrationForm:
-    """
-    Full-screen patient registration form.
-
-    * Required fields are marked with a red asterisk.
-    (optional) indicates optional fields.
-    """
-
     def __init__(self, root: tk.Tk, staff_id: int) -> None:
         self.root = root
         self.staff_id = staff_id
-        self._init_window()
+        # form_vars now stores dicts with var and required flag
         self.form_vars = {}
+        self._init_window()
         self._build_ui()
 
     def _init_window(self):
         self.root.title("Patient Registration")
-        # Load app icon if available
         icon_file = Path(BASE_DIR) / 'resources' / 'app.ico'
         if icon_file.exists():
             try:
@@ -47,7 +39,6 @@ class PatientRegistrationForm:
                 pass
 
         self.root.attributes('-fullscreen', True)
-        # Define color palette
         self.colors = {
             'bg': '#ffffff',
             'accent': '#000000',
@@ -61,7 +52,7 @@ class PatientRegistrationForm:
         self.root.configure(bg=self.colors['bg'])
 
         style = ttk.Style(self.root)
-        style.theme_use('clam')  # placeholder theme
+        style.theme_use('clam')
         style.configure('Section.TFrame', background=self.colors['section_bg'])
         style.configure('TLabel', background=self.colors['section_bg'], foreground=self.colors['accent'], font=('Arial', 14))
         style.configure('TFrame', background=self.colors['bg'])
@@ -69,7 +60,6 @@ class PatientRegistrationForm:
         style.configure('TCombobox', padding=5)
 
     def _build_ui(self):
-        # Header
         header = tk.Frame(self.root, bg=self.colors['accent'], height=60)
         header.pack(fill='x')
         tk.Label(
@@ -78,7 +68,6 @@ class PatientRegistrationForm:
             bg=self.colors['accent'], fg=self.colors['button_fg']
         ).pack(pady=15)
 
-        # Legend
         legend = tk.Frame(self.root, bg=self.colors['bg'])
         legend.pack(fill='x', padx=20)
         tk.Label(
@@ -90,7 +79,6 @@ class PatientRegistrationForm:
             font=("Arial", 12, 'italic'), fg=self.colors['optional'], bg=self.colors['bg']
         ).pack(side='left', padx=10)
 
-        # Scrollable content
         container = tk.Frame(self.root, bg=self.colors['bg'])
         container.pack(fill='both', expand=True, padx=20, pady=10)
 
@@ -109,10 +97,9 @@ class PatientRegistrationForm:
         canvas.pack(side='left', fill='both', expand=True)
         scrollbar.pack(side='right', fill='y')
 
-        # Sections
         sections = [
             ("Personal Information", [
-                ("First Name", True), ("Last Name", True), ("Date of Birth", True),
+                ("First Name", True), ("Middle Name", True), ("Last Name", True), ("Date of Birth", True),
                 ("Gender", True), ("Phone", True), ("Email", False)
             ]),
             ("Address", [
@@ -120,8 +107,8 @@ class PatientRegistrationForm:
                 ("Province", True), ("Region", True), ("ZIP/Postal Code", True)
             ]),
             ("Emergency Contact", [
-                ("Contact Name", True), ("Relationship", True), ("Phone", True),
-                ("Email", False)
+                ("Emergency Contact Name", True), ("Emergency Contact Relationship", True), 
+                ("Emergency Contact Phone", True), ("Emergency Contact Email", False)
             ]),
             ("Insurance", [
                 ("Insurance Provider", False), ("Policy Number", False),
@@ -132,7 +119,6 @@ class PatientRegistrationForm:
         for title, fields in sections:
             self._create_section(scroll_frame, title, fields)
 
-        # Buttons
         btn_frame = tk.Frame(self.root, bg=self.colors['bg'], pady=15)
         btn_frame.pack(fill='x', side='bottom')
         tk.Button(
@@ -167,13 +153,14 @@ class PatientRegistrationForm:
         for idx, (label, required) in enumerate(fields):
             frame = ttk.Frame(content, style='Section.TFrame')
             frame.grid(row=idx//cols, column=idx%cols, sticky='ew', padx=8, pady=8)
-            # Label
-            text = f"{'* ' if required else ''}{label}{'' if required else ' (optional)'}"
+            display_label = f"{'* ' if required else ''}{label}{'' if required else ' (optional)'}"
             fg = self.colors['required'] if required else self.colors['optional']
-            tk.Label(frame, text=text, font=("Arial", 13), fg=fg, bg=self.colors['section_bg']).pack(anchor='w', pady=(0,6))
-            # Widget
+            tk.Label(frame, text=display_label, font=("Arial", 13), fg=fg, bg=self.colors['section_bg']).pack(anchor='w', pady=(0,6))
+
             var = tk.StringVar()
-            self.form_vars[label] = var
+            # store each field's variable and required flag
+            self.form_vars[label] = {'var': var, 'required': required}
+
             if label == "Date of Birth":
                 DateEntry(frame, textvariable=var, date_pattern='yyyy-mm-dd', font=("Arial",14), width=40).pack(fill='x', pady=4)
             elif label == "Gender":
@@ -194,61 +181,117 @@ class PatientRegistrationForm:
                 )
                 entry.pack(fill='x', pady=4, ipady=8)
 
+    def get_field_value(self, label: str) -> str:
+        """Helper to retrieve and strip a field's value."""
+        field = self.form_vars.get(label)
+        if field:
+            return field['var'].get().strip()
+        return ''
+
     def _submit(self):
-        # Collect data
-        data = [var.get().strip() for var in self.form_vars.values()]
-        data.append(self.staff_id)
+        # Validation for required fields
+        missing = []
+        for label, data in self.form_vars.items():
+            if data['required'] and not data['var'].get().strip():
+                missing.append(label)
 
-        # Define DB fields
-        db_fields = [
-            "fname","lname","dob","gender","phonenum","email",  # Personal
-            "Street","barangay","cityMunicipality","province","region","zip",  # Address
-            "ECname","ECrelationship","ECphone","ECemail",  # Emergency
-            "insuranceProvider","Policynum","GroupNum","PrimaryInsured","staffID"
-        ]
-
-        # Validation
-        missing = [label for label, var in self.form_vars.items()
-                if var.get().strip() == '' and not "(optional)" in label]
         if missing:
-            messagebox.showwarning("Missing Fields", "Please complete all required fields.", parent=self.root)
+            messagebox.showwarning("Missing Fields",
+                                   f"Please complete all required fields: {', '.join(missing)}.",
+                                   parent=self.root)
             return
 
-        # Regex patterns
+        # Regular expression patterns
+        name_pattern = re.compile(r'^[A-Za-z\s]+$')
         phone_pattern = re.compile(r'^\d{10,11}$')
         email_pattern = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w{2,4}$')
         zip_pattern = re.compile(r'^\d{4}$')
 
+        # Validate names
+        for fld in ["First Name", "Middle Name", "Last Name"]:
+            val = self.get_field_value(fld)
+            if val and not name_pattern.match(val):
+                messagebox.showerror("Invalid Input",
+                                     f"{fld} may only contain letters and spaces.",
+                                     parent=self.root)
+                return
+
         # Validate phone numbers
-        phone_fields = ["Phone", "Phone (Emergency Contact)"]
-        for field in ["Phone", "ECphone"]:
-            phone_value = self.form_vars.get(field, tk.StringVar()).get().strip()
-            if phone_value and not phone_pattern.match(phone_value):
-                messagebox.showerror("Invalid Input", f"Invalid phone number format in '{field}'. Use 10 or 11 digits.", parent=self.root)
+        for fld in ["Phone", "Emergency Contact Phone"]:
+            val = self.get_field_value(fld)
+            if val and not phone_pattern.match(val):
+                messagebox.showerror("Invalid Input",
+                                     f"Invalid {fld.lower()} format. Use 10 or 11 digits.",
+                                     parent=self.root)
                 return
 
         # Validate emails
-        for field in ["Email", "ECemail"]:
-            email_value = self.form_vars.get(field, tk.StringVar()).get().strip()
-            if email_value and not email_pattern.match(email_value):
-                messagebox.showerror("Invalid Input", f"Invalid email format in '{field}'.", parent=self.root)
+        for fld in ["Email", "Emergency Contact Email"]:
+            val = self.get_field_value(fld)
+            if val and not email_pattern.match(val):
+                messagebox.showerror("Invalid Input",
+                                     f"Invalid {fld.lower()} format.",
+                                     parent=self.root)
                 return
 
         # Validate ZIP code
-        zip_value = self.form_vars.get("ZIP/Postal Code", tk.StringVar()).get().strip()
-        if zip_value and not zip_pattern.match(zip_value):
-            messagebox.showerror("Invalid Input", "Invalid ZIP/Postal Code. Must be 4 digits.", parent=self.root)
+        zip_val = self.get_field_value("ZIP/Postal Code")
+        if zip_val and not zip_pattern.match(zip_val):
+            messagebox.showerror("Invalid Input",
+                                 "Invalid ZIP/Postal Code. Must be 4 digits.",
+                                 parent=self.root)
             return
 
-        # Insert into DB
-        fnc.database_con().insert("registration", db_fields, data)
-        messagebox.showinfo("Success", "Patient registered successfully!", parent=self.root)
-        self._clear()
-        
+        # Field mapping for DB insert
+        field_mapping = {
+            "First Name": "fname",
+            "Middle Name": "mname",
+            "Last Name": "lname",
+            "Date of Birth": "dob",
+            "Gender": "gender",
+            "Phone": "phonenum",
+            "Email": "email",
+            "Street": "Street",
+            "Barangay": "barangay",
+            "City/Municipality": "cityMunicipality",
+            "Province": "province",
+            "Region": "region",
+            "ZIP/Postal Code": "zip",
+            "Emergency Contact Name": "ECname",
+            "Emergency Contact Relationship": "ECrelationship",
+            "Emergency Contact Phone": "ECphone",
+            "Emergency Contact Email": "ECemail",
+            "Insurance Provider": "insuranceProvider",
+            "Policy Number": "Policynum",
+            "Group Number": "GroupNum",
+            "Primary Insured": "PrimaryInsured"
+        }
+
+        db_fields = list(field_mapping.values()) + ["staffID"]
+
+        # Collect data
+        data = []
+        for fld in field_mapping:
+            data.append(self.get_field_value(fld))
+        data.append(self.staff_id)
+
+        # Insert into database
+        try:
+            fnc.database_con().insert("registration", db_fields, data)
+            messagebox.showinfo("Success", "Patient registered successfully!", parent=self.root)
+            self._clear()
+        except Exception as e:
+            messagebox.showerror("Database Error",
+                                 f"An error occurred while saving to the database:\n{e}",
+                                 parent=self.root)
+
     def _clear(self):
-        for label,var in self.form_vars.items():
+        for label, data in self.form_vars.items():
+            var = data['var']
             if label == "Region":
                 var.set('Select Region')
+            elif label == "Gender":
+                var.set('Male')
             else:
                 var.set('')
 

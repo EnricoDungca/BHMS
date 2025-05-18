@@ -87,8 +87,8 @@ class InventoryManagementApp:
     def create_header(self, parent):
         header = tk.Frame(parent, bg="white")
         header.pack(fill=tk.X)
-        tk.Label(header, text="🗃️ Inventory Management", font=self.title_font, bg="white").pack(side=tk.LEFT)
-        tk.Button(header, text="+ Add New Inventory Item", font=self.button_font, bg="#1a1a1a", fg="white",
+        tk.Label(header, text="🗃️ Inventory and Services", font=self.title_font, bg="white").pack(side=tk.LEFT)
+        tk.Button(header, text="+ Add New Inventory Item or Service", font=self.button_font, bg="#1a1a1a", fg="white",
                 padx=10, pady=6, relief=tk.FLAT, command=self.add_inventory).pack(side=tk.RIGHT)
 
     def add_inventory(self):
@@ -100,24 +100,24 @@ class InventoryManagementApp:
         search.pack(fill=tk.X)
         tk.Label(search, text="🔍 Search: ", font=self.small_font, bg="white").pack(side=tk.LEFT)
         self.search_entry = tk.Entry(search, font=self.table_font, width=50, bd=1, relief=tk.SOLID)
-        self.search_entry.insert(0, "Search inventory items...")
+        self.search_entry.insert(0, "Search inventory items and services...")
         self.search_entry.pack(side=tk.LEFT, padx=10)
         self.search_entry.bind("<FocusIn>", self.clear_placeholder)
         self.search_entry.bind("<FocusOut>", self.restore_placeholder)
         self.search_entry.bind("<KeyRelease>", self.perform_search)
 
     def clear_placeholder(self, e):
-        if self.search_entry.get() == "Search inventory items...":
+        if self.search_entry.get() == "Search inventory items and services...":
             self.search_entry.delete(0, tk.END)
 
     def restore_placeholder(self, e):
         if self.search_entry.get() == "":
-            self.search_entry.insert(0, "Search inventory items...")
+            self.search_entry.insert(0, "Search inventory items and services...")
 
     def create_table(self, parent):
         frame = tk.Frame(parent, bg="white", bd=1, relief=tk.SOLID, padx=20, pady=20)
         frame.pack(fill=tk.BOTH, expand=True)
-        tk.Label(frame, text="📋 Inventory Directory", font=self.header_font, bg="white").pack(anchor=tk.W)
+        tk.Label(frame, text="📋 Items and Services Directory", font=self.header_font, bg="white").pack(anchor=tk.W)
         tk.Label(frame, text="Manage and view all inventory items", font=self.small_font,
                 fg="#666666", bg="white").pack(anchor=tk.W, pady=(0,15))
 
