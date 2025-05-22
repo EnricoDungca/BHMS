@@ -2,6 +2,9 @@ import tkinter as tk
 from tkinter import font, ttk, messagebox
 import sys, os
 from datetime import date
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 
 # Ensure relative import paths work after PyInstaller bundling
 BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
@@ -17,6 +20,44 @@ from Front_End.PagesGUI import Inventory
 from Front_End.FormGUI import emailSender
 from Front_End.FormEditUI import EdittForm
 from Front_End.PagesGUI import bedTracking
+
+
+
+# this class is popup screen for export data to docx
+class ExportPopup(tk.Toplevel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.title("Export Options")
+        self.geometry("300x300")
+        self.grab_set()  # Make popup modal
+
+        tk.Label(self, text="Choose what to export:", font=('Arial', 12)).pack(pady=10)
+
+        self.export_choice = tk.StringVar(value="Patient Records")
+
+        # Export options
+        options = ["Patient Records", "Appointment Records", "Medical Records", "Billing Records", "Inventory Records"]
+        for option in options:
+            tk.Radiobutton(self, text=option, variable=self.export_choice, value=option).pack(anchor="w", padx=20)
+
+        tk.Button(self, text="Export", command=self.export_selected).pack(pady=10)
+        tk.Button(self, text="Cancel", command=self.destroy).pack()
+
+    def export_selected(self):
+        choice = self.export_choice.get()
+        if choice == "Patient Records":
+            fnc.SaveAsDoc(choice, "registration").write_doc()
+        elif choice == "Appointment Records":
+            fnc.SaveAsDoc(choice, "appointment").write_doc()
+        elif choice == "Medical Records":
+            fnc.SaveAsDoc(choice, "checkup").write_doc()
+        elif choice == "Billing Records":
+            fnc.SaveAsDoc(choice, "billing").write_doc()
+        elif choice == "Inventory Records":
+            fnc.SaveAsDoc(choice, "inventory").write_doc()
+        self.destroy() 
+
+
 
 class DashboardApp(tk.Tk):
     def __init__(self, user_id):
@@ -118,7 +159,7 @@ class DashboardApp(tk.Tk):
             command=self.logout
         )
         logout_btn.grid(row=0, column=2, sticky="e", padx=20)
-
+    
     def create_main_content(self):
         content = tk.Frame(self, bg="#f4f5f7")
         content.pack(fill="both", expand=True, padx=20, pady=20)
@@ -131,11 +172,15 @@ class DashboardApp(tk.Tk):
         # Action buttons
         btn_frame = tk.Frame(header, bg="#f4f5f7")
         btn_frame.pack(side="right")
-        for label, cmd in [("Bed Tracking", self.open_beds), ("Send Email", self.send_email)]:
+        for label, cmd in [("🛌🏻Bed Tracking", self.open_beds), ("📧Send Email", self.send_email)]:
             tk.Button(btn_frame, text=label, font=self.button_font,
                       bg="#f4f5f7", fg="#666666", relief="flat",
                       cursor="hand2", command=cmd).pack(side="left", padx=8)
-
+            
+        tk.Button(btn_frame, text="Export records as .docx", font=self.button_font,
+                  bg="#f4f5f7", fg="#666666", relief="flat",
+                  cursor="hand2", command= lambda: ExportPopup(self)).pack(side="left", padx=8)
+        
         # Date
         tk.Label(header, text=date.today().strftime("%B %d, %Y"),
                  font=self.small_font, bg="#f4f5f7").pack(side="right", padx=12)
@@ -149,15 +194,53 @@ class DashboardApp(tk.Tk):
     def create_summary_cards(self, parent):
         frame = tk.Frame(parent, bg="#f4f5f7")
         frame.pack(pady=30)
+
         total_pats = len(fnc.database_con().read("registration", "*"))
-        total_rec  = (len(fnc.database_con().read("checkup", "*"))
-                      + len(fnc.database_con().read("nsd", "*")))
-        for idx, (title, value) in enumerate([("Total Registered Patients", total_pats), ("Medical Records", total_rec)]):
-            card = tk.Frame(frame, bg="white", bd=1, relief="flat", width=300, height=100)
-            card.grid(row=0, column=idx, padx=30)
-            card.grid_propagate(False)
-            tk.Label(card, text=title, font=("Arial",11), fg="#666666", bg="white").pack(anchor="w", pady=(12,4), padx=12)
-            tk.Label(card, text=str(value), font=("Arial",20,"bold"), bg="white").pack(expand=True, fill="both", padx=12)
+        total_rec = (len(fnc.database_con().read("checkup", "*")) +
+                    len(fnc.database_con().read("nsd", "*")))
+
+        # Smaller figure
+        fig, ax = plt.subplots(figsize=(4, 4), dpi=100, facecolor='none')
+        labels = ['Registered Patients', 'Medical Records']
+        values = [total_pats, total_rec]
+        colors = ['#4e73df', '#1cc88a']
+
+        wedges, texts, autotexts = ax.pie(
+            values,
+            autopct='%1.1f%%',
+            startangle=90,
+            colors=colors,
+            textprops={'color': 'white', 'fontsize': 10, 'weight': 'bold'},
+            wedgeprops={'linewidth': 1, 'edgecolor': 'white'}
+        )
+
+        for text in autotexts:
+            text.set_color("white")
+            text.set_fontsize(10)
+            text.set_weight("bold")
+
+        ax.set_title("Patient vs. Medical Record Distribution", fontsize=12, color="#333", weight='bold')
+        ax.axis('equal')
+        fig.patch.set_alpha(0.0)
+        fig.tight_layout(pad=1.5)
+
+        canvas = FigureCanvasTkAgg(fig, master=frame)
+        canvas.draw()
+        canvas.get_tk_widget().pack()
+
+        card_frame = tk.Frame(frame, bg="#f4f5f7")
+        card_frame.pack(pady=10)
+
+        def create_stat_card(parent, label, value, bg_color):
+            card = tk.Frame(parent, bg=bg_color, width=180, height=55)
+            card.pack(side=tk.LEFT, padx=10)
+            card.pack_propagate(False)
+            tk.Label(card, text=label, font=("Arial", 9, "bold"), bg=bg_color, fg="white").pack(pady=(8, 0))
+            tk.Label(card, text=str(value), font=("Arial", 13, "bold"), bg=bg_color, fg="white").pack()
+
+        create_stat_card(card_frame, "Registered Patients", total_pats, "#4e73df")
+        create_stat_card(card_frame, "Medical Records", total_rec, "#1cc88a")
+
 
     def create_appointments_section(self, parent):
         container = tk.Frame(parent, bg="#f4f5f7")
@@ -180,13 +263,13 @@ class DashboardApp(tk.Tk):
                  font=self.header_font, bg="#f4f5f7").pack(anchor="w", pady=(0,12))
 
         for appt in fnc.database_con().read("appointment", "*"):
-            if str(appt[6]) == str(date.today().strftime("%Y-%m-%d")):
+            if str(appt[7]) == str(date.today().strftime("%Y-%m-%d")):
                 data = {
                     "ID": appt[0],
-                    "name": f"{appt[2]} {appt[3]}",
-                    "dt": f"{appt[6]} · {appt[7]}",
-                    "type": appt[8],
-                    "status": appt[10]
+                    "name": f"{appt[2]} {appt[3]} {appt[4]}",
+                    "dt": f"{appt[7]} · {appt[8]}",
+                    "type": appt[9],
+                    "status": appt[11]
                 }
                 self._add_appointment_card(inner, data)
 

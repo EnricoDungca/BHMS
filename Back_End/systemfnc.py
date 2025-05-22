@@ -8,6 +8,7 @@ from dotenv import dotenv_values
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import sys, os, datetime, subprocess
+import docx
 
 def resource_path(relative_path):
     """Get absolute path to resource, works for dev and for PyInstaller bundle"""
@@ -44,8 +45,6 @@ class Sys_log:
             }
             log_file.write(f"---------------- \n[{log['LogName']}] \n{log['Datetime']} \n{log['LogText']} \n----------------\n\n")
         
-
-
 
 class email:
     def __init__(self, email, validation):
@@ -331,3 +330,46 @@ class database_con:
             messagebox.showerror("Error", f"Database backup failed: {e.stderr.decode('utf-8')}")
         except OSError as e:
             messagebox.showerror("Error", f"Database backup failed: {e}")
+    
+    
+class SaveAsDoc:
+    def __init__(self, doc_name: str, db_table: str):
+        self.doc_name = doc_name
+        self.db_table = db_table
+        self.timestamp = datetime.datetime.now()
+        self.formatted_datetime = self._get_formatted_datetime()
+        self.doc = docx.Document()
+        
+        # Connect to the database once
+        db = database_con()
+        self.column_names = [col[0] for col in db.column_names(db_table)]
+        self.data_rows = db.read(db_table, "*")
+
+    def _get_formatted_datetime(self) -> str:
+        return self.timestamp.strftime("Date: %Y-%m-%d    Time: %H:%M:%S")
+    
+    def write_doc(self):
+        try:
+            self.doc.add_heading({self.doc_name}, level=0)
+            self.doc.add_paragraph(self.formatted_datetime)
+            self.doc.add_paragraph('')  # Spacer for clarity
+
+            if not self.data_rows:
+                messagebox.showwarning("Warning", "No data found in the database.")
+                return
+            for row in self.data_rows:
+                table = self.doc.add_table(rows=0, cols=2, style='Table Grid')
+                for i, col_name in enumerate(self.column_names):
+                    row_cells = table.add_row().cells
+                    row_cells[0].text = str(col_name)
+                    row_cells[1].text = str(row[i])
+                self.doc.add_paragraph('')  # Spacer between records
+
+            filename = f"{self.doc_name}_{self.timestamp.strftime('%Y%m%d_%H%M%S')}.docx"
+            self.doc.save(filename)
+            if os.path.exists(filename):
+                messagebox.showinfo("Success", f"Document saved as: {filename}")
+            else:
+                messagebox.showerror("Error", "Failed to save the document.")
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {e}")

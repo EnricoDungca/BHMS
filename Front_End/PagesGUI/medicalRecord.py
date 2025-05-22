@@ -130,11 +130,11 @@ class MedicalRecordManagementApp:
             sub_title="Manage and view all check ups",
             table_type="checkup"
         )
-
+        
         # Populate NSD tab
         self.create_search(self.nsd_frame, "Search NSD records…", search_for="nsd")
         self.create_nsd_table(self.nsd_frame)
-
+        
         # Show default
         self.show_medical_records()
 
@@ -360,7 +360,7 @@ class MedicalRecordManagementApp:
     def edit_checkup(self, record_id):
         self.root.destroy()
         EdittForm.main(self.user_id, record_id, "checkup", "medicalRecord")
-
+        
     def create_nsd_table(self, parent):
         frame = tk.Frame(parent, bg="white", bd=1, relief=tk.SOLID, padx=20, pady=20)
         frame.pack(fill=tk.BOTH, expand=True)
