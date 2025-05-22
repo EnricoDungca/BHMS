@@ -302,38 +302,71 @@ class BillingForm:
                 self.form_vars['Payment Status'].set(target)
 
     def _submit(self):
-        data = {k:v.get().strip() for k,v in self.form_vars.items()}
-        # validate
-        missing = [f for f in ('Patient Name','Total Payment','Payment Method','Payment Status')
-                   if not data.get(f)]
+        data = {k: v.get().strip() for k, v in self.form_vars.items()}
+
+        # Validate required fields
+        missing = [f for f in ('Patient Name', 'Total Payment', 'Payment Method', 'Payment Status')
+                if not data.get(f)]
         if missing:
             messagebox.showwarning('Missing', f"Complete required: {', '.join(missing)}", parent=self.root)
             return
+
         if not self.item_rows:
-            messagebox.showwarning('Missing','Add at least one item.', parent=self.root)
+            messagebox.showwarning('Missing', 'Add at least one item.', parent=self.root)
             return
-        pid = next((p[0] for p in self.patients if f"{p[2]} {p[3]}"==data['Patient Name']), None)
+
+        # Get patient ID
+        pid = next((p[0] for p in self.patients if f"{p[2]} {p[3]} {p[4]}" == data['Patient Name']), None)
         if pid is None:
-            messagebox.showerror('Error','Patient not found.', parent=self.root)
+            messagebox.showerror('Error', 'Patient not found.', parent=self.root)
             return
-        # update inventory
+
+        # Log details before submit to database
+        logs = []
+        for name, qty, unit_price, total_price in self.item_rows:
+            rec = next((r for r in self.inventory if r[2] == name), None)
+            if rec:
+                old_qty = rec[4]
+                old_total = rec[5]
+                logs.append(
+                    f"\n[Item Detail] Item Name: {rec[2]} | Old Quantity: {old_qty} | Total Price: {old_total:.2f}"
+                )
+                logs.append(
+                    f"[Item Used] Item Name: {name} | Used Quantity: {qty} | Unit Price: {unit_price:.2f} | Total: {total_price:.2f}"
+                )
+                logs.append(
+                    f"[New Inventory Quantity] Item Name: {rec[2]} | New Quantity: {old_qty - qty}"
+                )
+
+        log_message = "\n".join(logs)
+        
+
+        # Update inventory
         for name, qty, _, _ in self.item_rows:
-            rec = next((r for r in self.inventory if r[2]==name), None)
+            rec = next((r for r in self.inventory if r[2] == name), None)
             if rec:
                 new_qty = int(rec[4]) - qty
-                fnc.database_con().Record_edit('inventory','quantity',new_qty,'id',rec[0])
-                fnc.database_con().Record_edit('inventory','totalPrice',float(rec[5])*new_qty,'id',rec[0])
-        # build details
-        details = '\n'.join(f"{n} x{q} @ {u:.2f} = {t:.2f}" for n,q,u,t in self.item_rows)
+                new_total_price = float(rec[5]) * new_qty
+                fnc.database_con().Record_edit('inventory', 'quantity', new_qty, 'id', rec[0])
+                fnc.database_con().Record_edit('inventory', 'totalPrice', new_total_price, 'id', rec[0])
+
+        # Build item used details
+        details = '\n'.join(f"{n} x{q} @ {u:.2f} = {t:.2f}" for n, q, u, t in self.item_rows)
+
+        # Insert billing record into database
         fnc.database_con().insert(
             'billing',
-            ('patientID','patientName','itemused','totalpayment','totalcharges',
-             'balance','paymentMethod','paymentStatus','notes','staffID'),
+            ('patientID', 'patientName', 'itemused', 'totalpayment', 'totalcharges',
+            'balance', 'paymentMethod', 'paymentStatus', 'notes', 'staffID'),
             [pid, data['Patient Name'], details,
-             data['Total Payment'], data['Total Charges'], data['Balance'],
-             data['Payment Method'], data['Payment Status'], data.get('Notes',''), self.staff_id]
+            data['Total Payment'], data['Total Charges'], data['Balance'],
+            data['Payment Method'], data['Payment Status'], data.get('Notes', ''), self.staff_id]
         )
+
+        fnc.Sys_log("Billing_Log", f"Patient Name: {data['Patient Name']} \n{log_message}").write_log()
+        
         self._clear_form()
+
 
     def _clear_form(self):
         for f,var in self.form_vars.items():
@@ -350,9 +383,9 @@ class BillingForm:
     def _back_to_menu(self):
         self.root.destroy()
         Billing.main(self.staff_id)
-
-
-def main(staff_id: int = 8):
+        
+    
+def main(staff_id: int):
     root = tk.Tk()
     BillingForm(root, staff_id)
     root.mainloop()

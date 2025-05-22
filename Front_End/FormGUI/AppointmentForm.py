@@ -69,6 +69,7 @@ class AppointmentForm:
 
         self.create_section("👤 Patient Information", {
             "First Name *": "",
+            "Middle Name *": "",
             "Last Name *": "",
             "Phone Number *": "",
             "Email": ""  # optional
@@ -109,11 +110,10 @@ class AppointmentForm:
             frame = tk.Frame(section, bg=self.colors["section_bg"])
             frame.pack(fill="x", pady=8)
 
-            # Label color red if required field
             label_color = "#d60000" if "*" in field else self.colors["text"]
 
             label = tk.Label(frame, text=field, font=("Arial", 13), fg=label_color,
-                            bg=self.colors["section_bg"], anchor="w")
+                             bg=self.colors["section_bg"], anchor="w")
             label.pack(fill="x")
 
             var = tk.StringVar()
@@ -121,6 +121,8 @@ class AppointmentForm:
                 entry = DateEntry(frame, textvariable=var, font=("Arial", 12),
                                 date_pattern='yyyy-mm-dd')
                 entry.pack(fill="x", ipady=6)
+                # store the var so submit_data() sees it
+                self.form_vars[field] = var
             elif "Time" in field:
                 time_frame = tk.Frame(frame, bg=self.colors["section_bg"])
                 time_frame.pack(fill="x")
@@ -150,9 +152,6 @@ class AppointmentForm:
                 entry.pack(fill="x", ipady=6)
                 self.form_vars[field] = var
 
-
-    import re  # Add this at the top if not already present
-
     def submit_data(self):
         data = []
         for key, var in self.form_vars.items():
@@ -166,18 +165,16 @@ class AppointmentForm:
             else:
                 value = var.get().strip()
 
-                # Required field check
                 if "*" in key and not value:
                     messagebox.showwarning("Missing Field", f"{key} is required.")
                     return
 
-                # Regex validations
                 if key == "Phone Number *":
                     if not re.fullmatch(r"^\d{11}$", value):
                         messagebox.showerror("Invalid Input", "Phone number must be exactly 11 digits.")
                         return
 
-                elif key == "Email" and value:  # Optional but validate if present
+                elif key == "Email" and value:
                     if not re.fullmatch(r"^[\w\.-]+@[\w\.-]+\.\w+$", value):
                         messagebox.showerror("Invalid Input", "Please enter a valid email address.")
                         return
@@ -191,12 +188,14 @@ class AppointmentForm:
 
         data.append(self.id)
         print("Data submitted:", data)
-        fnc.database_con().insert("appointment", ("Fname", "Lname", "phonenum", "email",
-                                                "apptDate", "apptTime", "apptType", "provider",
-                                                "status", "notes", "staffID"), data)
+        fnc.database_con().insert(
+            "appointment",
+            ("Fname","mname", "Lname", "phonenum", "email",
+             "apptDate", "apptTime", "apptType", "provider",
+             "status", "notes", "staffID"),
+            data
+        )
         self.clear_form()
-        messagebox.showinfo("Success", "Appointment scheduled successfully!")
-
 
     def clear_form(self):
         for key, var in self.form_vars.items():
@@ -213,7 +212,7 @@ class AppointmentForm:
         self.root.destroy()
         Appointment.main(self.id)
 
-def main(id=8):
+def main(id):
     root = tk.Tk()
     app = AppointmentForm(root, id)
     root.mainloop()

@@ -232,8 +232,7 @@ class PatientProfileApp:
                 checkup_records.append({
                     "ID": data[0],
                     "Type": "Check-up",
-                    "Date": data[4],
-                    "Provider": data[12],
+                    "Date": data[1],
                     "Diagnosis": data[10],
                     "Medications": data[11]
                 })
@@ -251,7 +250,7 @@ class PatientProfileApp:
                     "Baby Weight": data[7],
                     "Apgar Score": data[5]
                 })
-
+        
         if not checkup_records and not nsd_records:
             no_record_label = tk.Label(scroll_frame, text="No medical record found.", font=("Arial", 14), bg="white", fg="gray")
             no_record_label.pack(pady=20)
@@ -259,17 +258,19 @@ class PatientProfileApp:
             for record in checkup_records:
                 card = tk.Frame(scroll_frame, bg="white", bd=1, relief="solid", padx=15, pady=10)
                 card.pack(fill="x", padx=20, pady=10)
+                tk.Label(card, text=f"Record ID: {record['ID']}", font=("Arial", 14, "bold"), bg="white").pack(anchor="w")
                 tk.Label(card, text=f"{record['Type']}", font=("Arial", 14, "bold"), bg="white").pack(anchor="w")
-                tk.Label(card, text=f"{record['Date']} - {record['Provider']}", font=("Arial", 14, "bold"), bg="white").pack(anchor="w")
+                tk.Label(card, text=f"{record['Date']}", font=("Arial", 14, "bold"), bg="white").pack(anchor="w")
                 tk.Label(card, text=f"Diagnosis: {record['Diagnosis']}", font=("Arial", 12), bg="white").pack(anchor="w", pady=2)
                 tk.Label(card, text=f"Medications: {record['Medications']}", font=("Arial", 12), bg="white").pack(anchor="w", pady=2)
                 
-                view_btn = tk.Button(card, text="View", command=lambda: self.view(self.id, record["ID"], "checkup"), font=("Arial", 12), bg="#3498db", fg="white", relief="flat", padx=12, pady=6, cursor="hand2")
+                view_btn = tk.Button(card, text="View", command=lambda rid=record['ID']: self.view(self.id, rid, "checkup"), font=("Arial", 12), bg="#3498db", fg="white", relief="flat", padx=12, pady=6, cursor="hand2")
                 view_btn.pack(pady=20)
 
             for record in nsd_records:
                 card = tk.Frame(scroll_frame, bg="white", bd=1, relief="solid", padx=15, pady=10)
                 card.pack(fill="x", padx=20, pady=10)
+                tk.Label(card, text=f"Record ID: {record['ID']}", font=("Arial", 14, "bold"), bg="white").pack(anchor="w")
                 tk.Label(card, text=f"{record['Type']}", font=("Arial", 14, "bold"), bg="white").pack(anchor="w")
                 tk.Label(card, text=f"{record['Date of Delivery']} - {record['Time of Delivery']}", font=("Arial", 14, "bold"), bg="white").pack(anchor="w")
                 tk.Label(card, text=f"Delivery Note: {record['Delivery Note']}", font=("Arial", 12), bg="white").pack(anchor="w", pady=2)
@@ -282,6 +283,7 @@ class PatientProfileApp:
         
     def view(self, staff_id, patient_id, record_type):
         self.root.destroy()
+        print (patient_id, staff_id, record_type)
         medicalProfile.main(patient_id, staff_id, record_type)
         
 

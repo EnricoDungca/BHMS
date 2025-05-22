@@ -57,7 +57,7 @@ class AppointmentManagementApp:
         nav_frame = tk.Frame(topbar, bg="#111111")
         nav_frame.grid(row=0, column=1)
 
-        nav_items = ["Dashboard", "Patients", "Appointments", "Records", "Billing", "Inventory"]
+        nav_items = ["🏠︎Dashboard", "🛌Patients", "🗓️Appointments", "📋Records", "💳Billing", "📦Inventory"]
         for item in nav_items:
             btn = tk.Button(
                 nav_frame,
@@ -89,17 +89,17 @@ class AppointmentManagementApp:
 
     def nav_click(self, item):
         self.root.destroy()
-        if item == "Dashboard":
+        if item == "🏠︎Dashboard":
             Dashboard.main(self.id)
-        elif item == "Patients":
+        elif item == "🛌Patients":
             patientRegistration.main(self.id)
-        elif item == "Appointments":
+        elif item == "🗓️Appointments":
             main(self.id)
-        elif item == "Records":
+        elif item == "📋Records":
             medicalRecord.main(self.id)
-        elif item == "Billing":
+        elif item == "💳Billing":
             Billing.main(self.id)
-        elif item == "Inventory":
+        elif item == "📦Inventory":
             Inventory.main(self.id)
 
     def logout(self):
@@ -161,7 +161,7 @@ class AppointmentManagementApp:
         table_frame.pack(fill=tk.BOTH, expand=True)
 
         headers = ["Appointment ID", "Patient Name", "Date/Time", "Provider", "Status", "Actions"]
-        col_widths = [150, 250, 250, 250, 250, 250, 250]
+        col_widths = [150, 300, 250, 250, 250, 250, 250]
 
         header_row = tk.Frame(table_frame, bg="#f5f5f5")
         header_row.pack(fill=tk.X)
@@ -192,10 +192,10 @@ class AppointmentManagementApp:
         for row in appointments:
             appointment = {
                 "ID": row[0],
-                "patient_name": row[2],
-                "datetime": f"{row[6]} - {row[7]}",
-                "provider": row[9],
-                "status": row[10],
+                "patient_name": f"{row[2]} {row[3]} {row[4]}",
+                "datetime": f"{row[7]} - {row[8]}",
+                "provider": row[10],
+                "status": row[11],
             }
             self.create_appointment_row(parent, appointment, col_widths)
 
@@ -220,7 +220,7 @@ class AppointmentManagementApp:
         actions_frame = tk.Frame(row_frame, bg="white")
         actions_frame.pack(side=tk.LEFT, padx=10)
 
-        tk.Button(actions_frame, text="View", font=self.small_font, bg="white", fg="black",
+        tk.Button(actions_frame, text="view", font=self.small_font, bg="white", fg="black",
                   bd=1, relief=tk.SOLID, padx=10,
                   command=lambda: self.viewProfile(appointment["ID"])).pack(side=tk.LEFT, padx=5)
 

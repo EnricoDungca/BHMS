@@ -24,7 +24,29 @@ if not os.path.exists(env_path):
     messagebox.showerror("Error", f".env.secret file not found at: {env_path}")
 
 config = dotenv_values(env_path)
-  
+
+
+class Sys_log:
+    def __init__(self, Log_name, Log_text):
+        self.Log_name = Log_name
+        self.Log_text = Log_text
+        
+    def write_log(self):
+        # make Directory
+        if not os.path.exists("Logs"):
+            os.makedirs("Logs")
+        # create log file
+        with open(f"Logs/{self.Log_name}.text", "a") as log_file:
+            log = {
+                "Datetime": datetime.datetime.now().strftime("Date: %Y-%m-%d Time: %H:%M:%S"),
+                "LogName": self.Log_name,
+                "LogText": self.Log_text
+            }
+            log_file.write(f"---------------- \n[{log['LogName']}] \n{log['Datetime']} \n{log['LogText']} \n----------------\n\n")
+        
+
+
+
 class email:
     def __init__(self, email, validation):
         self.email = email

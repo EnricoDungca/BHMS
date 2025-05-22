@@ -153,18 +153,27 @@ class EditForm:
             elif field == "status":
                 options = ["Pending", "Confirmed", "Completed", "Cancelled"]
                 ent = self._combo(self.form_frame, var, options)
-            
+
+            elif field == "totalPrice":
+                ent = tk.Entry(self.form_frame, textvariable=var, width=40, state='readonly')
+                try:
+                    quantity = float(row[self.columns.index("quantity")])
+                    price = float(row[self.columns.index("unitPrice")])
+                    total = quantity * price
+                    var.set(f"{total:.2f}")
+                except (ValueError, IndexError, TypeError) as e:
+                    var.set("0.00")
+                    
             elif field == "accountstatus":
                 options = ["Active", "Disabled"]
                 ent = self._combo(self.form_frame, var, options)
-            
             elif field == "otpStatus":
                 options = ["Active", "Disabled"]
                 ent = self._combo(self.form_frame, var, options)
-
             else:
                 ent = ttk.Entry(self.form_frame, textvariable=var, width=40)
-
+        
+            
             ent.grid(row=idx + 1, column=1, padx=10, pady=6, sticky="w")
 
             if field == "ID" or field == "datesave":
@@ -192,6 +201,34 @@ class EditForm:
 
     def submit(self):
         updates = {field: var.get() for field, var in self.entry_vars}
+
+        # Auto-calculate totalPrice for inventory
+        if self.tableName.lower() == "inventory":
+            try:
+                quantity =  float(updates.get("quantity", 0))
+                price = float(updates.get("unitPrice", 0))
+                total_price = quantity * price
+                updates["totalPrice"] = total_price
+            except ValueError:
+                messagebox.showerror("Input Error", "Quantity and Price must be valid float values.")
+                return
+
+        # inventory logs
+        if self.tableName.lower() == "inventory":
+            Item = self.db.read("inventory", "*")
+            for item in Item:
+                if item[0] == self.record_id:
+                    old_data = {
+                        "ID": item[0],
+                        "datesave": item[1].isoformat() if hasattr(item[1], "isoformat") else str(item[1]),
+                        "name": item[2],
+                        "category": item[3],
+                        "quantity": item[4],
+                        "price": item[5],
+                        "totalprice": item[6],
+                    }
+            fnc.Sys_log("Inventory", f"Old Data: {old_data} \nNew Data: {updates}").write_log()
+
         try:
             for col, val in updates.items():
                 if col == "password" and val:
@@ -203,6 +240,7 @@ class EditForm:
             self.back()
         except Exception as e:
             messagebox.showerror("Error", f"Could not update record.\n{e}")
+
 
 def main(staffID, record_id, table_name, tab):
     root = tk.Tk()

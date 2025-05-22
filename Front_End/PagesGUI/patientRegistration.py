@@ -54,7 +54,7 @@ class PatientManagementApp:
 
         nav_frame = tk.Frame(topbar, bg="#111111")
         nav_frame.grid(row=0, column=1)
-        nav_items = ["Dashboard", "Patients", "Appointments", "Records", "Billing", "Inventory"]
+        nav_items = ["🏠︎Dashboard", "🛌Patients", "🗓️Appointments", "📋Records", "💳Billing", "📦Inventory"]
         for item in nav_items:
             tk.Button(nav_frame, text=item, font=self.nav_font, bg="#111111", fg="white",
                       activebackground="#222222", activeforeground="white", border=0, cursor="hand2",
@@ -67,12 +67,12 @@ class PatientManagementApp:
 
     def nav_click(self, item):
         self.root.destroy()
-        if item == "Dashboard": Dashboard.main(self.user_id)
-        elif item == "Patients": main(self.user_id)
-        elif item == "Appointments": Appointment.main(self.user_id)
-        elif item == "Records": medicalRecord.main(self.user_id)
-        elif item == "Billing": Billing.main(self.user_id)
-        elif item == "Inventory": Inventory.main(self.user_id)
+        if item == "🏠︎Dashboard": Dashboard.main(self.user_id)
+        elif item == "🛌Patients": main(self.user_id)
+        elif item == "🗓️Appointments": Appointment.main(self.user_id)
+        elif item == "📋Records": medicalRecord.main(self.user_id)
+        elif item == "💳Billing": Billing.main(self.user_id)
+        elif item == "📦Inventory": Inventory.main(self.user_id)
 
     def logout(self):
         self.root.destroy()

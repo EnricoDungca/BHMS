@@ -57,7 +57,7 @@ class BillingManagementApp:
         nav_frame = tk.Frame(topbar, bg="#111111")
         nav_frame.grid(row=0, column=1)
 
-        nav_items = ["Dashboard", "Patients", "Appointments", "Records", "Billing", "Inventory"]
+        nav_items = ["🏠︎Dashboard", "🛌Patients", "🗓️Appointments", "📋Records", "💳Billing", "📦Inventory"]
         for item in nav_items:
             btn = tk.Button(
                 nav_frame,
@@ -89,17 +89,17 @@ class BillingManagementApp:
 
     def nav_click(self, item):
         self.root.destroy()
-        if item == "Dashboard":
+        if item == "🏠︎Dashboard":
             Dashboard.main(self.user_id)
-        elif item == "Patients":
+        elif item == "🛌Patients":
             patientRegistration.main(self.user_id)
-        elif item == "Appointments":
+        elif item == "🗓️Appointments":
             Appointment.main(self.user_id)
-        elif item == "Records":
+        elif item == "📋Records":
             medicalRecord.main(self.user_id)
-        elif item == "Billing":
+        elif item == "💳Billing":
             BillingPage.main(self.user_id)
-        elif item == "Inventory":
+        elif item == "📦Inventory":
             Inventory.main(self.user_id)
 
     def logout(self):

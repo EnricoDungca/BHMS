@@ -131,8 +131,9 @@ class ProfileViewer:
         
         # Get patient name
         first_name = self.patient_data["Patient Information"]["First Name"]
+        middle_name = self.patient_data["Patient Information"]["Middle Name"]
         last_name = self.patient_data["Patient Information"]["Last Name"]
-        full_name = f"{first_name} {last_name}"
+        full_name = f"{first_name} {middle_name} {last_name}"
         
         # Patient name
         name_font = Font(family="Arial", size=24, weight="bold")
@@ -318,15 +319,16 @@ def show_profile(ID, staffID):
             patient_data = {
                 "Patient Information": {
                     "First Name": row[2],
-                    "Last Name": row[3]
+                    "Middle Name": row[3],
+                    "Last Name": row[4]
                 },
                 "Appointment Details": {
-                    "status": row[10],
-                    "Appointment Date": row[6],
-                    "Appointment Time": row[7],
-                    "Appointment Type": row[8],
-                    "Preferred Doctor": row[9],
-                    "Notes": row[11] if len(row) > 12 else ""
+                    "status": row[11],
+                    "Appointment Date": row[7],
+                    "Appointment Time": row[8],
+                    "Appointment Type": row[9],
+                    "Preferred Doctor": row[10],
+                    "Notes": row[12] if len(row) > 12 else ""
                 }
             }
             break

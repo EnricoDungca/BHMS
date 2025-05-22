@@ -53,7 +53,7 @@ class InventoryManagementApp:
 
         nav_frame = tk.Frame(topbar, bg="#111111")
         nav_frame.grid(row=0, column=1)
-        nav_items = ["Dashboard", "Patients", "Appointments", "Records", "Billing", "Inventory"]
+        nav_items = ["🏠︎Dashboard", "🛌Patients", "🗓️Appointments", "📋Records", "💳Billing", "📦Inventory"]
         for item in nav_items:
             tk.Button(nav_frame, text=item, font=self.nav_font, bg="#111111", fg="white",
                     activebackground="#222222", activeforeground="white", border=0, cursor="hand2",
@@ -66,12 +66,12 @@ class InventoryManagementApp:
 
     def nav_click(self, item):
         self.root.destroy()
-        if item == "Dashboard": Dashboard.main(self.user_id)
-        elif item == "Patients": PatientPage.main(self.user_id)
-        elif item == "Appointments": Appointment.main(self.user_id)
-        elif item == "Records": medicalRecord.main(self.user_id)
-        elif item == "Billing": Billing.main(self.user_id)
-        elif item == "Inventory": main(self.user_id)
+        if item == "🏠︎Dashboard": Dashboard.main(self.user_id)
+        elif item == "🛌Patients": PatientPage.main(self.user_id)
+        elif item == "🗓️Appointments": Appointment.main(self.user_id)
+        elif item == "📋Records": medicalRecord.main(self.user_id)
+        elif item == "💳Billing": Billing.main(self.user_id)
+        elif item == "📦Inventory": main(self.user_id)
 
     def logout(self):
         self.root.destroy()
@@ -142,6 +142,9 @@ class InventoryManagementApp:
         scroll.pack(side=tk.RIGHT, fill=tk.Y)
         self.list_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         self.populate_table(self.list_frame, col_w)
+        # now check for low stock using the default threshold of 20
+        self.low_stock_alert()
+
 
     def populate_table(self, parent, col_w, query=""):
         items = fnc.database_con().read("inventory", "*")
@@ -164,8 +167,6 @@ class InventoryManagementApp:
         act = tk.Frame(row, bg="white"); act.pack(side=tk.LEFT, padx=10)
         tk.Button(act, text="Edit", font=self.small_font, bg="black", fg="white",
                 bd=0, relief=tk.FLAT, command=lambda id=item["ID"]: self.edit_item(id)).pack(side=tk.LEFT, padx=5)
-        tk.Button(act, text="Delete", font=self.small_font, bg="black", fg="white",
-                bd=0, relief=tk.FLAT, command=lambda id=item["ID"]: self.delete_item(id)).pack(side=tk.LEFT, padx=5)
 
     def perform_search(self, e=None):
         q = self.search_entry.get().lower().strip()
@@ -177,12 +178,23 @@ class InventoryManagementApp:
         self.root.destroy()
         EdittForm.main(self.user_id, item_id, "inventory", "Inventory")
 
-    def delete_item(self, item_id):
-        fnc.database_con().Record_delete("inventory", "id", item_id)
-        for w in self.list_frame.winfo_children(): w.destroy()
-        self.populate_table(self.list_frame, [100,250,250,250,250,250,200])
 
-
+    def low_stock_alert(self, threshold=20):
+        """
+        Checks for inventory items whose quantity is <= threshold
+        and pops up a warning listing them.
+        """
+        
+        rows = fnc.database_con().read("inventory", "*")
+        low_items = [
+            f"{r[2]} (ID: {r[0]}) – Qty: {r[4]}"
+            for r in rows
+            if isinstance(r[4], (int, float)) and r[4] <= threshold and not r[3] == "Service"
+        ]
+        if low_items:
+            msg = "The following items are low in stock (≤ 20 units):\n\n" + "\n".join(low_items)
+            messagebox.showwarning("Low Stock Alert", msg)
+    
 def main(user_id):
     root = tk.Tk()
     app = InventoryManagementApp(root, user_id)

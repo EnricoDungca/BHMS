@@ -340,7 +340,7 @@ class MedicalRecordForm:
 
         # insert patientID from registration
         for names in self.names:
-            if data[0] == f"{names[2]} {names[3]}":
+            if data[0] == f"{names[2]} {names[3]} {names[4]}":
                 data.insert(0, names[0])
 
         if section_name == "Check-up Form":

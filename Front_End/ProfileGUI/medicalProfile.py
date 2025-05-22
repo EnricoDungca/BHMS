@@ -190,9 +190,9 @@ class MedicalRecordViewer:
 
 
 # -----------------------------------------------------------------------------
-def main(record_id, staff_id, rec_type="checkup"):
+def main(record_id, staff_id, rec_type):
     # fetch data based on type
-    table = "checkup" if rec_type=="checkup" else "nsd"
+    table = "checkup" if rec_type =="checkup" else "nsd"
     recs = fnc.database_con().read(table, "*")
     record_data = None
     for rec in recs:
