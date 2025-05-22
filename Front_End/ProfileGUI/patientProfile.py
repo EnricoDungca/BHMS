@@ -3,6 +3,16 @@ from tkinter import ttk, filedialog, messagebox, PhotoImage
 from PIL import ImageGrab, Image, ImageTk
 import sys, os, io
 
+
+def resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller bundle"""
+    try:
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 # Ensure relative import paths work after PyInstaller bundling
 BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
 sys.path.insert(0, os.path.join(BASE_DIR, "BHMS"))
@@ -30,7 +40,7 @@ class PatientProfileApp:
         self.checkup = fnc.database_con().read("checkup", "*")
         self.billing = fnc.database_con().read("billing", "*")
 
-        default_logo_path = "Z:/BHMS/Front_End/Pic/logo.png"
+        default_logo_path = resource_path(os.path.join("Front_End", "Pic", "logo.png"))
         try:
             self.logo_image = PhotoImage(file=default_logo_path)
         except Exception:

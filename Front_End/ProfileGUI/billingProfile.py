@@ -6,6 +6,15 @@ import os
 from PIL import ImageGrab, Image, ImageTk
 import sys
 
+def resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller bundle"""
+    try:
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 # Ensure relative import paths work after PyInstaller bundling
 BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
 sys.path.insert(0, os.path.join(BASE_DIR, "BHMS"))
@@ -37,7 +46,7 @@ class BillingViewer:
         # ---------------------------------------------------------------------
 
         self.staff_id = staff_id
-        self.profile_image = Image.open("Front_End/Pic/logo.png")  # logo / placeholder
+        self.profile_image = Image.open(resource_path(os.path.join("Front_End", "Pic", "logo.png"))) # logo / placeholder
 
         # color palette
         self.colors = {
